@@ -11,9 +11,8 @@ const runtime = `import { createServer } from "node:http";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const distRoot = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+const distRoot = path.resolve(process.env.SITE_DIST_ROOT || path.join(process.cwd(), "dist"));
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
