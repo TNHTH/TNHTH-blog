@@ -11,3 +11,4 @@ coverage/
 local-vault.config.*
 publish-allowlist.yml
 *.sha256
+.openai/hosting.json
