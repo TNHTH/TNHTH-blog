@@ -1,0 +1,4 @@
+#!/bin/sh
+pnpm.cmd run ci
+status=$?
+if [ "$status" -ne 0 ]; then exit "$status"; fi

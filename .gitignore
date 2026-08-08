@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.env
+.env.*
+!.env.example
+coverage/
+.tmp/
+*.log
+local-vault.config.*
+publish-allowlist.yml
+*.sha256

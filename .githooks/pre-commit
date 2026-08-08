@@ -1,0 +1,4 @@
+#!/bin/sh
+pnpm.cmd audit:public
+status=$?
+if [ "$status" -ne 0 ]; then exit "$status"; fi

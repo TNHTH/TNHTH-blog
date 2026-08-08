@@ -1,0 +1,8 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import ProjectRow from "../../components/ProjectRow.astro";
+import { getCollection } from "astro:content";
+const projects = (await getCollection("work")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+<BaseLayout title="Work"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="01 / Work" title="Selected systems" intro="Projects are described with evidence, contribution boundaries, and current limitations—not just polished outcomes." />{projects.length ? projects.map((project, index) => <ProjectRow index={String(index + 1).padStart(2, "0")} title={project.data.title} summary={project.data.summary} status={project.data.status} tags={project.data.tags} href={`/work/${project.id}`} />) : <div class="rule py-10 muted">No public projects have passed review yet.</div>}</section></BaseLayout>

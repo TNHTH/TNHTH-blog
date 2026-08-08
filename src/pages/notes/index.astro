@@ -1,0 +1,8 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import ContentList from "../../components/ContentList.astro";
+import { getCollection } from "astro:content";
+const entries = await getCollection("notes");
+---
+<BaseLayout title="Notes"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="02 / Notes" title="Working knowledge" intro="Concepts, formulas, and system patterns explained in public after they survive a second look." /><ContentList base="/notes" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} /></section></BaseLayout>

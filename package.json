@@ -1,0 +1,35 @@
+{
+  "name": "guohao-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "engines": { "node": ">=24 <25", "pnpm": ">=10 <11" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "content:sync": "tsx scripts/sync-vault.ts",
+    "content:verify": "tsx scripts/validate-public.ts --snapshot",
+    "audit:public": "tsx scripts/validate-public.ts --snapshot",
+    "sync:github": "tsx scripts/sync-github.ts",
+    "hooks:install": "node scripts/install-git-hooks.mjs",
+    "ci": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test && astro build",
+    "prebuild": "pnpm content:verify && pnpm audit:public"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.6.0",
+    "astro": "^6.0.0",
+    "tailwindcss": "^4.1.0",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@tailwindcss/vite": "^4.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}

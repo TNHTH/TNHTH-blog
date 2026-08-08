@@ -1,0 +1,54 @@
+---
+import "../styles/global.css";
+import { site } from "../../config/site";
+
+interface Props { title?: string; description?: string; }
+const { title = site.name, description = site.description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <title>{title} — {site.alias}</title>
+  </head>
+  <body class="m-0">
+    <header class="site-shell mx-auto flex items-center justify-between py-6 md:py-8">
+      <a class="focus-ring display text-xl" href="/">{site.name}<span class="accent">.</span></a>
+      <nav aria-label="Primary navigation" class="hidden gap-5 text-xs font-semibold tracking-[.12em] uppercase md:flex">
+        {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
+      </nav>
+      <details class="relative md:hidden">
+        <summary class="focus-ring cursor-pointer list-none p-2 text-xs font-semibold tracking-[.12em] uppercase">Menu</summary>
+        <nav aria-label="Mobile navigation" class="absolute right-0 z-10 grid min-w-40 gap-3 border border-[var(--line)] bg-[var(--paper)] p-4 text-xs font-semibold tracking-[.12em] uppercase shadow-lg">
+          {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
+        </nav>
+      </details>
+      <button id="theme-toggle" class="focus-ring border-0 bg-transparent p-2 text-xs font-semibold" type="button" aria-label="Toggle color theme">◐</button>
+    </header>
+    <main><slot /></main>
+    <footer class="site-shell mx-auto rule mt-24 flex flex-col gap-5 py-8 text-xs md:flex-row md:items-center md:justify-between">
+      <span class="muted">© {new Date().getFullYear()} {site.alias}. Built from public, reviewed notes.</span>
+      <div class="flex gap-5 font-semibold uppercase tracking-[.12em]">
+        <a class="focus-ring" href={site.github}>GitHub ↗</a>
+        {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>Email ↗</a>}
+      </div>
+    </footer>
+    <script is:inline>
+      const key = "guohao-theme";
+      const button = document.querySelector("#theme-toggle");
+      const setTheme = (value) => { document.documentElement.dataset.theme = value; localStorage.setItem(key, value); };
+      if (localStorage.getItem(key) === "dark") setTheme("dark");
+      button?.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+    </script>
+    <style is:global>
+      :root[data-theme="dark"] { --paper: #171817; --ink: #f4f0e8; --muted: #a9aa9f; --line: #3a3c36; --signal: #f27b61; }
+    </style>
+  </body>
+</html>
