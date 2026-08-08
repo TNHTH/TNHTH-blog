@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
@@ -7,12 +7,6 @@ const serverRoot = path.join(distRoot, "server");
 
 await mkdir(serverRoot, { recursive: true });
 
-const runtime = `import { createServer } from "node:http";
-import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
-import path from "node:path";
-
-const distRoot = path.resolve(process.env.SITE_DIST_ROOT || path.join(process.cwd(), "dist"));
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".gif": "image/gif",
@@ -26,57 +20,57 @@ const mimeTypes = {
   ".svg": "image/svg+xml",
   ".txt": "text/plain; charset=utf-8",
   ".webp": "image/webp",
-  ".xml": "application/xml; charset=utf-8"
+  ".xml": "application/xml; charset=utf-8",
 };
 
-function safePath(requestUrl) {
-  const pathname = decodeURIComponent(new URL(requestUrl, "http://localhost").pathname);
-  const relative = pathname.replace(/^\\/+/, "") || "index.html";
-  const candidate = path.resolve(distRoot, relative);
-  if (candidate !== distRoot && !candidate.startsWith(distRoot + path.sep)) return null;
-  return candidate;
+async function collectAssets(root, current = root) {
+  const assets = [];
+  for (const item of await readdir(current, { withFileTypes: true })) {
+    const full = path.join(current, item.name);
+    const relative = path.relative(root, full).replaceAll("\\", "/");
+    if (relative === "server" || relative.startsWith("server/") || relative === ".openai" || relative.startsWith(".openai/")) continue;
+    if (item.isDirectory()) assets.push(...await collectAssets(root, full));
+    else assets.push({
+      path: `/${relative}`,
+      body: (await readFile(full)).toString("base64"),
+      type: mimeTypes[path.extname(full).toLowerCase()] || "application/octet-stream",
+    });
+  }
+  return assets;
 }
 
-async function findFile(requestUrl) {
-  const candidate = safePath(requestUrl);
-  if (!candidate) return null;
-  const candidates = [candidate];
-  if (!path.extname(candidate)) candidates.push(path.join(candidate, "index.html"), candidate + ".html");
-  for (const file of candidates) {
-    try {
-      const info = await stat(file);
-      if (info.isFile()) return file;
-    } catch {}
+const assets = await collectAssets(distRoot);
+const runtime = `const assets = ${JSON.stringify(Object.fromEntries(assets.map((asset) => [asset.path, { body: asset.body, type: asset.type }])))};
+
+function candidatePaths(pathname) {
+  const normalized = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  const candidates = [pathname || "/index.html"];
+  if (!pathname.includes(".")) {
+    candidates.push((normalized || "") + "/index.html");
+    candidates.push((normalized || "") + ".html");
   }
-  return null;
+  return [...new Set(candidates)];
 }
 
-const server = createServer(async (request, response) => {
-  if (!request.url || !["GET", "HEAD"].includes(request.method ?? "GET")) {
-    response.writeHead(405, { "allow": "GET, HEAD" });
-    response.end();
-    return;
-  }
-  let file;
-  try {
-    file = await findFile(request.url);
-  } catch {
-    file = null;
-  }
-  if (!file) {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    response.end("Not found");
-    return;
-  }
-  const contentType = mimeTypes[path.extname(file).toLowerCase()] ?? "application/octet-stream";
-  const info = await stat(file);
-  response.writeHead(200, { "content-type": contentType, "content-length": info.size });
-  if (request.method === "HEAD") response.end();
-  else createReadStream(file).pipe(response);
-});
+function decode(value) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
 
-const port = Number(process.env.PORT || 3000);
-server.listen(port, "0.0.0.0");
+export default {
+  async fetch(request) {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response("Method Not Allowed", { status: 405, headers: { allow: "GET, HEAD" } });
+    }
+    const pathname = new URL(request.url).pathname;
+    const key = candidatePaths(pathname).find((candidate) => assets[candidate]);
+    if (!key) return new Response("Not found", { status: 404 });
+    const asset = assets[key];
+    return new Response(request.method === "HEAD" ? null : decode(asset.body), {
+      headers: { "content-type": asset.type, "cache-control": key.endsWith(".html") ? "no-cache" : "public, max-age=31536000, immutable" },
+    });
+  },
+};
 `;
 
 await writeFile(path.join(serverRoot, "index.js"), runtime, "utf8");
