@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "start": "node dist/server/index.js",
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
@@ -16,7 +17,8 @@
     "audit:public": "tsx scripts/validate-public.ts --snapshot",
     "sync:github": "tsx scripts/sync-github.ts",
     "hooks:install": "node scripts/install-git-hooks.mjs",
-    "ci": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test && astro build",
+    "ci": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test && pnpm build",
+    "postbuild": "node scripts/prepare-sites-runtime.mjs",
     "prebuild": "npm run content:verify && npm run audit:public"
   },
   "dependencies": {
