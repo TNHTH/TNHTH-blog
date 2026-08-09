@@ -1,46 +1,53 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProjectRow from "../components/ProjectRow.astro";
+import ContentList from "../components/ContentList.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import { site } from "../../config/site";
 import { getCollection } from "astro:content";
+import mediaManifest from "../data/generated/media-manifest.json";
+import githubSnapshot from "../data/generated/github.json";
 
-const projects = (await getCollection("work"))
-  .filter(({ data }) => data.featured)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+interface GalleryItem { mediaId: string; path: string; width: number; height: number; format: string; sha256: string; alt: string; caption?: string; }
+interface GitHubItem { title: string; category: string; url: string; description: string | null; language: string | null; stars: number; }
+const galleryEntries = mediaManifest.entries as GalleryItem[];
+const githubRepos = githubSnapshot.repos as GitHubItem[];
+
+const work = (await getCollection("work")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const featured = work.filter(({ data }) => data.featured);
+const notes = (await getCollection("notes")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const writing = (await getCollection("writing")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
 <BaseLayout>
-  <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-28 md:pt-24">
+  <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-24 md:pt-24" aria-labelledby="hero-title">
     <div>
-      <div class="eyebrow mb-6"><span data-profile="location">{site.location}</span> · <span data-profile="headline">{site.headline}</span></div>
-      <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl" data-profile="heroTitle">{site.heroTitle}</h1>
-      <p class="muted mt-8 max-w-xl text-base leading-8" data-profile="heroDescription">{site.heroDescription}</p>
-      <a class="focus-ring mt-10 inline-flex items-center gap-4 border-b-2 border-[var(--signal)] pb-2 text-sm font-semibold tracking-[.12em]" href="/work">查看精选项目 <span>→</span></a>
+      <div class="eyebrow mb-6">{site.location} · {site.headline}</div>
+      <h1 id="hero-title" class="display max-w-4xl text-6xl leading-[.92] md:text-8xl">{site.heroTitle}</h1>
+      <p class="muted mt-8 max-w-xl text-base leading-8">{site.heroDescription}</p>
+      <a class="focus-ring mt-10 inline-flex items-center gap-4 border-b-2 border-[var(--signal)] pb-2 text-sm font-semibold tracking-[.12em]" href="/work">查看精选项目 <span aria-hidden="true">→</span></a>
     </div>
-    <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3">
-      <div class="eyebrow mb-4">当前方向</div>
-      <p class="m-0">机器人系统<br />强化学习<br />具身智能</p>
-    </div>
+    <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7"><div class="eyebrow mb-4">当前方向</div><p class="m-0">机器人系统<br />强化学习<br />系统工程</p></div>
   </section>
-  <section class="site-shell mx-auto" aria-labelledby="selected-work">
-    <div class="mb-2 flex items-end justify-between"><div class="eyebrow" id="selected-work">精选项目</div><span class="muted text-xs">2025—2026</span></div>
-    {projects.length ? projects.map((project, index) => (
-      <ProjectRow
-        index={`0${index + 1}`}
-        title={project.data.title}
-        summary={project.data.summary}
-        status={project.data.status}
-        tags={project.data.tags}
-        href={`/work/${project.id}`}
-        livePath={`src/content/work/${project.id}.md`}
-      />
-    )) : <div class="rule py-10 muted">公开项目正在复核准备中。</div>}
+
+  <section class="site-shell mx-auto" aria-labelledby="featured-work">
+    <SectionHeading eyebrow="01 / Work" title="精选项目" intro="从系统边界、工程方法与可复现证据理解项目，而不只展示结果。" />
+    <div id="featured-work">{featured.length ? featured.map((project, index) => <ProjectRow index={`0${index + 1}`} title={project.data.title} summary={project.data.summary} status={project.data.status} tags={project.data.tags} href={`/work/${project.id}`} />) : <p class="rule py-10 muted">公开项目正在复核中。</p>}</div>
   </section>
-  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">持续更新的档案</div>
-    <div>
-      <p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">这个网站是经过编辑的公开层，原始知识库始终保持私密。</p>
-      <a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.12em]" href="/about">了解公开边界 →</a>
-    </div>
+
+  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]" aria-labelledby="current-focus">
+    <div class="eyebrow" id="current-focus">02 / Current focus</div>
+    <div><p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">让感知、学习、控制和证据在同一个系统里对齐。</p><p class="muted mt-6 max-w-2xl leading-8">公开内容关注机器人、强化学习与系统工程之间的接口：假设在哪里成立，验证在哪里停止，下一步如何继续。</p></div>
   </section>
+
+  <section class="site-shell mx-auto mt-24" aria-labelledby="capabilities"><SectionHeading eyebrow="03 / Capabilities" title="能力边界" /><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{["机器人系统", "强化学习实验", "ROS2 与嵌入式", "证据驱动的工程文档"].map((item, index) => <div class="rule p-5"><span class="eyebrow">0{index + 1}</span><h2 class="mt-8 text-lg" id={index === 0 ? "capabilities" : undefined}>{item}</h2></div>)}</div></section>
+
+  <section class="site-shell mx-auto mt-24" aria-labelledby="latest-notes"><SectionHeading eyebrow="04 / Notes" title="最新笔记" intro="工作中的概念、模型和阅读方法。" /><ContentList base="/notes" items={notes.slice(0, 3).map(({ id, data }) => ({ slug: id, ...data }))} /></section>
+  <section class="site-shell mx-auto mt-24" aria-labelledby="latest-writing"><SectionHeading eyebrow="05 / Writing" title="最新写作" intro="项目复盘与持续积累的工程原则。" /><ContentList base="/writing" items={writing.slice(0, 3).map(({ id, data }) => ({ slug: id, ...data }))} /></section>
+
+  <section class="site-shell mx-auto mt-24" aria-labelledby="gallery-preview"><SectionHeading eyebrow="06 / Gallery" title="图库预览" intro="仅展示已授权、已脱敏并通过媒体扫描的 derivative。" />{galleryEntries.length ? <div class="grid gap-4 sm:grid-cols-3">{galleryEntries.slice(0, 3).map((item) => <a class="focus-ring" href="/gallery"><img class="aspect-[4/3] w-full object-cover" src={item.path} alt={item.alt} width={item.width} height={item.height} loading="lazy" /><span class="mt-2 block text-sm">{item.caption ?? item.alt}</span></a>)}</div> : <div class="rule py-10 muted" id="gallery-preview">图库保持空态，直到授权和元数据复核完成。</div>}</section>
+
+  <section class="site-shell mx-auto mt-24" aria-labelledby="github-projects"><SectionHeading eyebrow="07 / Public data" title="公开项目数据" intro="只读取显式白名单中的 GitHub 元数据；人工贡献说明不由 API 覆盖。" />{githubRepos.length ? <div class="grid gap-4 md:grid-cols-3">{githubRepos.slice(0, 3).map((repo) => <a class="focus-ring rule block p-5" href={repo.url} target="_blank" rel="noreferrer"><div class="eyebrow">{repo.category}</div><h2 class="mt-5 text-lg">{repo.title}</h2><p class="muted mt-3 text-sm leading-7">{repo.description ?? "暂无公开描述。"}</p><span class="muted mt-5 block text-xs">{repo.language ?? "多语言"} · ★ {repo.stars}</span></a>)}</div> : <div class="rule py-10 muted" id="github-projects">公开项目 snapshot 尚未同步，站点继续使用已提交内容。</div>}</section>
+
+  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]" aria-labelledby="public-boundary"><div class="eyebrow">08 / About</div><div><h2 id="public-boundary" class="display m-0 text-4xl md:text-5xl">公开是经过编辑的边界。</h2><p class="muted mt-6 max-w-2xl leading-8">私人笔记和原始素材留在本地；这里展示的内容经过审批、脱敏、扫描和静态构建。</p><a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.12em]" href="/about">了解公开边界 →</a></div></section>
 </BaseLayout>

@@ -8,19 +8,18 @@ interface Props {
   status: string;
   tags: string[];
   href: string;
-  livePath: string;
 }
 
-const { index, title, summary, status, tags, href, livePath } = Astro.props;
+const { index, title, summary, status, tags, href } = Astro.props;
 const displayStatus = statusLabel[status as keyof typeof statusLabel] ?? status;
 ---
 
-<a class="focus-ring group grid gap-6 border-t border-[var(--line)] py-8 md:grid-cols-[72px_1fr_160px] md:items-start" href={href} data-live-card data-live-path={livePath}>
+<a class="focus-ring group grid gap-6 border-t border-[var(--line)] py-8 md:grid-cols-[72px_1fr_160px] md:items-start" href={href}>
   <span class="eyebrow">{index}</span>
   <div>
-    <h2 class="display m-0 text-3xl transition-transform duration-300 group-hover:translate-x-2 md:text-4xl" data-live-title>{title}</h2>
-    <p class="muted mt-3 max-w-2xl text-sm leading-7" data-live-summary>{summary}</p>
-    <div class="mt-4 flex flex-wrap gap-2 text-[.68rem] font-semibold tracking-[.1em]" data-live-tags>{tags.map((tag) => <span class="border border-[var(--line)] px-2 py-1">{tag}</span>)}</div>
+    <h2 class="display m-0 text-3xl transition-transform duration-300 group-hover:translate-x-2 md:text-4xl">{title}</h2>
+    <p class="muted mt-3 max-w-2xl text-sm leading-7">{summary}</p>
+    <div class="mt-4 flex flex-wrap gap-2 text-[.68rem] font-semibold tracking-[.1em]">{tags.map((tag) => <span class="border border-[var(--line)] px-2 py-1">{tag}</span>)}</div>
   </div>
-  <div class="flex items-center justify-between gap-4 text-xs font-semibold tracking-[.12em] md:block md:text-right"><span class="accent" data-live-status>{displayStatus}</span><span class="ml-4">查看 →</span></div>
+  <div class="flex items-center justify-between gap-4 text-xs font-semibold tracking-[.12em] md:block md:text-right"><span class="accent">{displayStatus}</span><span class="ml-4">查看 →</span></div>
 </a>

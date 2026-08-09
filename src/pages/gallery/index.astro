@@ -1,5 +1,31 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
+import mediaManifest from "../../data/generated/media-manifest.json";
+interface GalleryItem { mediaId: string; path: string; width: number; height: number; format: string; sha256: string; alt: string; caption?: string; }
+const galleryEntries = mediaManifest.entries as GalleryItem[];
 ---
-<BaseLayout title="图库"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="04 / 图库" title="影像进行中" intro="一个用于照片与视觉实验的安静档案。只有经过授权、复核并清理元数据的媒体才会出现在这里。" /><div class="grid min-h-[360px] place-items-center border-y border-[var(--line)] py-20 text-center"><div><div class="display text-5xl">第一组影像正在复核。</div><p class="muted mx-auto mt-5 max-w-md text-sm leading-7">在授权和元数据检查完成前，不发布人像或定位信息。</p></div></div></section></BaseLayout>
+
+<BaseLayout title="图库">
+  <section class="site-shell mx-auto pt-16 md:pt-24">
+    <SectionHeading eyebrow="04 / 图库" title="影像进行中" intro="一个用于照片与视觉实验的安静档案。只有经过授权、复核并清理元数据的媒体才会出现在这里。" />
+    {galleryEntries.length ? <>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="公开影像">
+        {galleryEntries.map((item) => <button class="gallery-card focus-ring text-left" type="button" data-gallery-open data-gallery-src={item.path} data-gallery-alt={item.alt} aria-label={`查看 ${item.alt}`}><img src={item.path} alt={item.alt} width={item.width} height={item.height} loading="lazy" /><span class="mt-3 block text-sm">{item.caption ?? item.alt}</span></button>)}
+      </div>
+      <dialog id="gallery-dialog" class="gallery-dialog" aria-label="影像预览"><form method="dialog"><button class="focus-ring gallery-close" aria-label="关闭影像预览">关闭</button></form><img data-gallery-image alt="" /></dialog>
+    </> : <div class="grid min-h-[360px] place-items-center border-y border-[var(--line)] py-20 text-center"><div><div class="display text-5xl">第一组影像正在复核。</div><p class="muted mx-auto mt-5 max-w-md text-sm leading-7">在授权和元数据检查完成前，不发布人像或定位信息。</p></div></div>}
+  </section>
+  {galleryEntries.length > 0 && <script is:inline>
+    const galleryDialog = document.querySelector("#gallery-dialog");
+    const galleryImage = document.querySelector("[data-gallery-image]");
+    let galleryReturnFocus = null;
+    document.querySelectorAll("[data-gallery-open]").forEach((button) => button.addEventListener("click", () => {
+      galleryReturnFocus = button;
+      galleryImage.src = button.dataset.gallerySrc;
+      galleryImage.alt = button.dataset.galleryAlt ?? "";
+      galleryDialog.showModal();
+    }));
+    galleryDialog?.addEventListener("close", () => galleryReturnFocus?.focus());
+  </script>}
+</BaseLayout>

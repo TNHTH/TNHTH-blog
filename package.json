@@ -11,17 +11,24 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "start": "node dist/server/index.js",
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
-    "content:sync": "tsx scripts/sync-vault.ts",
+    "test:e2e": "playwright test",
+    "content:sync": "tsx scripts/publisher/cli.ts sync",
+    "publish:plan": "tsx scripts/publisher/cli.ts plan",
+    "publish:approve": "tsx scripts/publisher/cli.ts approve",
+    "publish:sync": "tsx scripts/publisher/cli.ts sync",
+    "publish:verify": "tsx scripts/publisher/cli.ts verify",
+    "publish:revoke": "tsx scripts/publisher/cli.ts revoke",
+    "media:build": "tsx scripts/media/build.ts",
     "content:verify": "tsx scripts/validate-public.ts --snapshot",
+    "privacy:text": "tsx scripts/privacy/text.ts",
+    "privacy:media": "tsx scripts/privacy/media.ts",
     "audit:public": "tsx scripts/validate-public.ts --snapshot",
     "sync:github": "tsx scripts/sync-github.ts",
     "hooks:install": "node scripts/install-git-hooks.mjs",
-    "ci": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test && pnpm build",
-    "postbuild": "node scripts/prepare-sites-runtime.mjs",
+    "ci": "pnpm content:verify && pnpm privacy:text && pnpm privacy:media && pnpm audit:public && pnpm check && pnpm test && pnpm build",
     "prebuild": "npm run content:verify && npm run audit:public"
   },
   "dependencies": {
@@ -29,14 +36,17 @@
     "astro": "^6.0.0",
     "dompurify": "^3.4.13",
     "marked": "^18.0.9",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.0",
     "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.1.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
+    "vite": "^7.3.6",
     "vitest": "^3.2.0"
   }
 }

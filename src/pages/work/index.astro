@@ -18,7 +18,6 @@ const projects = (await getCollection("work")).sort((a, b) => b.data.date.valueO
         status={project.data.status}
         tags={project.data.tags}
         href={`/work/${project.id}`}
-        livePath={`src/content/work/${project.id}.md`}
       />
     )) : <div class="rule py-10 muted">还没有通过公开复核的项目。</div>}
   </section>

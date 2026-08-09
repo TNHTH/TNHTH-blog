@@ -21,6 +21,11 @@ const work = defineCollection({
     evidence: z.array(z.string()).default([]),
     repo: z.url().optional(),
     featured: z.boolean().default(false),
+    problem: z.string().optional(),
+    context: z.string().optional(),
+    constraints: z.array(z.string()).default([]),
+    result: z.string().optional(),
+    limitations: z.array(z.string()).default([]),
   }),
 });
 

@@ -27,6 +27,17 @@ a:hover { color: var(--signal); }
 .muted { color: var(--muted); }
 .accent { color: var(--signal); }
 .focus-ring:focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; }
+.skip-link { position: fixed; left: 1rem; top: -4rem; z-index: 50; padding: .75rem 1rem; color: var(--paper); background: var(--ink); }
+.skip-link:focus { top: 1rem; }
+.prose :where(h2, h3) { font-family: var(--display); font-weight: 400; letter-spacing: -.03em; line-height: 1.05; }
+.prose :where(pre) { overflow-x: auto; padding: 1rem; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 92%, var(--paper)); color: var(--paper); }
+.prose :where(table) { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.prose :where(th, td) { border: 1px solid var(--line); padding: .5rem .75rem; text-align: left; }
+.gallery-card { border: 0; padding: 0; background: transparent; cursor: zoom-in; }
+.gallery-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--line); }
+.gallery-dialog { width: min(92vw, 1100px); border: 1px solid var(--line); padding: 1rem; color: var(--ink); background: var(--paper); }
+.gallery-dialog::backdrop { background: #000b; }
+.gallery-dialog img { display: block; width: 100%; max-height: 80vh; object-fit: contain; }
 @media (max-width: 720px) { .site-shell { width: calc(100% - 32px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }

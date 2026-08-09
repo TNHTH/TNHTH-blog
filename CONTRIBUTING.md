@@ -53,13 +53,13 @@ pnpm build           生产构建
 
 ## 5. 部署、撤回与恢复
 
-`main` 合并后由 CI 验证。授权维护者使用通过检查的精确提交保存 Sites 版本并部署；构建环境只读取仓库内公开快照，不访问私人 vault。
+`main` 合并后由 CI 验证。授权维护者使用通过检查的精确提交部署到 Vercel；构建环境只读取仓库内公开快照，不访问私人 vault。
 
-撤回文章时，先在分支中删除或恢复对应公开快照，再运行完整交付门并提交 PR。生产故障优先回滚到上一个成功 Sites 版本，其次回滚 Git 提交后重新验证。发布失败时保留失败日志，修复根因后重新运行相同检查，不要跳过安全扫描。
+撤回文章时，先通过 Publisher V2 标记 revoke，再在分支中更新对应公开快照，运行完整交付门并提交 PR。生产故障优先回滚到上一个成功 Vercel deployment，其次回滚 Git 提交后重新验证。发布失败时保留失败日志，修复根因后重新运行相同检查，不要跳过安全扫描。
 
 ## 6. 链接和品牌迁移检查
 
-如果调整站点地址、仓库地址或品牌，必须同步检查：`package.json`、`astro.config.mjs`、`.env.example`、`src/data/profile.json`、`src/layouts/BaseLayout.astro`、`src/pages/admin.astro`、`src/scripts/live-content.ts`、README、GitHub Actions 与 canonical URL。完成后全仓搜索旧地址，并用浏览器检查首页、About、内容详情和 `/admin`。
+如果调整站点地址、仓库地址或品牌，必须同步检查：`package.json`、`astro.config.mjs`、`.env.example`、`src/data/profile.json`、`src/layouts/BaseLayout.astro`、`src/pages/admin.astro`、README、GitHub Actions 与 canonical URL。完成后全仓搜索旧地址，并用浏览器检查首页、About、内容详情和 `/admin`。
 
 ## 7. 本地文件与安全
 
