@@ -1,11 +1,12 @@
 {
   "name": "郭伟浩",
+  "brand": "TNHTH-blog",
   "alias": "TNHTH",
   "headline": "机器人 · 强化学习 · 系统工程",
   "location": "中国 · 杭州",
   "description": "郭伟浩的机器人系统、强化学习实验与工程笔记。",
   "heroTitle": "让系统感知、学习并行动。",
   "heroDescription": "记录机器人项目、强化学习实验，以及其背后的工程判断与实现边界。",
-  "github": "https://github.com/TNHTH/tnhth-portfolio",
+  "github": "https://github.com/TNHTH/TNHTH-blog",
   "email": ""
 }

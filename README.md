@@ -1,13 +1,22 @@
-# TNHTH Portfolio
+# TNHTH-blog
 
-郭伟浩的中文个人网站与公开知识层，展示机器人系统、强化学习实验、工程项目和经过复核的笔记。
+郭伟浩的中文个人站，记录机器人、强化学习、系统工程与经过复核的技术笔记。品牌名是 **TNHTH-blog**，作者姓名仍为“郭伟浩”。
+
+## 快速链接
+
+- [公开网站](https://tnhth-blog.honest-civet-7225.chatgpt.site)
+- [内容工作台（/admin）](https://tnhth-blog.honest-civet-7225.chatgpt.site/admin)
+- [GitHub 仓库](https://github.com/TNHTH/TNHTH-blog)
+- [GitHub Actions](https://github.com/TNHTH/TNHTH-blog/actions)
+- [Issues](https://github.com/TNHTH/TNHTH-blog/issues)
+- [维护规范](./CONTRIBUTING.md)
 
 ## 技术栈
 
-- Astro 6 静态输出、TypeScript、Tailwind CSS。
-- Node.js 24、pnpm 10。
-- GitHub Actions 对 Pull Request 和 `main` 执行完整检查。
-- Vercel 或兼容静态托管平台负责公开部署。
+- Astro 6 静态输出、TypeScript、Tailwind CSS
+- Node.js 24、pnpm 10
+- GitHub Actions 执行公开扫描、类型检查、测试和生产构建
+- OpenAI Sites 托管公开快照；构建环境不读取私人 vault
 
 ## 常用命令
 
@@ -21,53 +30,43 @@ pnpm run ci
 pnpm hooks:install
 ```
 
-pnpm 10 将 `pnpm ci` 保留为内置命令，因此本项目的完整交付门使用 `pnpm run ci`。
+由于 pnpm 10 保留了内置 `pnpm ci` 命令，项目完整交付门统一使用 `pnpm run ci`。
 
 ## 内容工作台
 
-构建后访问 `/admin` 可看到中文内容工作台。它集中列出个人资料、项目、笔记和写作，并提供：
+访问网站的 `/admin` 路由可以快速浏览公开资料、项目、笔记和写作，并跳转到 GitHub 官方在线编辑页。工作台不保存登录信息，也不直接修改仓库；编辑权限、分支、Pull Request 和合并由 GitHub 控制。
 
-- 打开公开页面；
-- 前往对应的 GitHub 在线编辑页；
-- 查看待审核修改；
-- 查看自动检查结果。
+推荐流程：从工作台打开编辑入口，在分支中修改，等待 `Public snapshot and site checks` 通过，完成脱敏复核后合并到 `main`。生产站只读取 `main` 中已经提交的公开快照。
 
-工作台本身不接触账号凭据。编辑权限由 GitHub 官方身份验证和仓库权限控制；未获得仓库写入权限的人只能查看公开内容，不能修改或发布。
+## 公开内容边界
 
-推荐发布流程：在线编辑时创建新分支与 Pull Request，等待 `Public snapshot and site checks` 通过，人工复核差异后再合并。公开页面会读取 `main` 分支中的最新资料和既有文章内容；新增路由仍需经过常规代码发布。
+公开仓库只包含经过审核的公开快照。私人 vault、审批清单、凭据、本地绝对路径、日记、HR 材料、未授权照片、内部链接、未经核验的贡献描述和未批准附件都不得进入仓库。`40_生活/`、`60_事务/`、`70_工作日志/` 不是一刀切封禁，但高风险来源必须提供脱敏后的公开版并通过扫描。
 
-## 公开快照流程
-
-私有内容在本仓库之外审核。精确清单记录来源、集合、slug、正文哈希、风险等级和获准附件哈希；同步脚本只把通过审核的快照写入 `src/content` 与 `src/assets`。
+内容发布链路如下：
 
 ```text
-私有来源 → 精确清单与 Frontmatter → 哈希检查 → 公开扫描 → 快照 → 构建
+私人来源 → 精确审批与哈希 → Frontmatter 校验 → 敏感信息扫描 → 公开快照 → CI → 部署
 ```
 
-内容相关命令：
+相关命令：
 
 ```text
-pnpm content:sync     # 本地执行：从已审批来源生成公开快照
-pnpm content:verify   # 验证已提交的公开快照
-pnpm audit:public     # 扫描秘密、个人信息、路径和私人链接
-pnpm sync:github      # 只更新明确列出的公开仓库元数据
+pnpm content:sync     # 从已审批来源生成公开快照
+pnpm content:verify   # 校验已提交快照
+pnpm audit:public     # 扫描秘密、个人信息、路径和私有链接
+pnpm sync:github      # 只读取 config/public-repos.yml 中的仓库
 pnpm run ci           # 完整交付门
 ```
 
-高风险派生文档还必须包含 `publicVersion: true` 与 `sanitized: true`。正文或附件哈希发生变化、Frontmatter 缺失、Obsidian 链接未解析、附件未批准或安全扫描失败时，同步会立即终止。
+更多新增、修改、审核、撤回和故障恢复规则见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
 
-## 安全边界
+## 部署约定
 
-不得把私人知识库、审批清单、凭据、本地路径、原始日记、HR 材料、内部汇报、未脱敏工作资料或未批准媒体复制进本仓库。公开校验器会拒绝秘密、私人路径、Obsidian 内部链接、违规文件类型和字段不完整的项目内容。
+- `main` 是唯一生产分支；Pull Request 只生成预览或等待检查。
+- 发布必须使用已经通过 `pnpm run ci` 的精确提交，不部署未提交内容。
+- 站点 canonical 由 `PUBLIC_SITE_URL` 控制，默认值为公开网站地址。
+- 管理页设置为 `noindex`，编辑入口始终指向 `https://github.com/TNHTH/TNHTH-blog`。
 
-撤回文章时，从私有审批清单移除对应项，重新同步，检查差异并运行 `pnpm run ci`。公开快照是唯一可部署内容，托管平台无法读取或恢复私人知识库。
+## 许可证与内容使用
 
-## 部署参数
-
-```text
-Build command: pnpm build
-Output directory: dist
-Production branch: main
-```
-
-托管环境不需要私人知识库路径或 GitHub 写入凭据。自定义域名可通过 `PUBLIC_SITE_URL` 配置 canonical URL。
+仓库中的文章、项目说明和图片仅代表作者公开、复核后的表达。转载第三方内容前必须确认授权并保留来源；不公开私人笔记或内部材料。

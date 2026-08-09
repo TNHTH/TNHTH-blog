@@ -8,7 +8,7 @@ interface Props {
   noindex?: boolean;
 }
 
-const { title = site.name, description = site.description, noindex = false } = Astro.props;
+const { title = site.brand, description = site.description, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
 ---
 
@@ -25,11 +25,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <title>{title} · {site.alias}</title>
+    <title>{title} · {site.brand}</title>
   </head>
   <body class="m-0">
     <header class="site-shell mx-auto flex items-center justify-between py-6 md:py-8">
-      <a class="focus-ring display text-xl" href="/"><span data-profile="name">{site.name}</span><span class="accent">.</span></a>
+      <a class="focus-ring display text-xl" href="/"><span data-profile="brand">{site.brand}</span><span class="accent">.</span></a>
       <nav aria-label="主导航" class="hidden gap-5 text-xs font-semibold tracking-[.12em] md:flex">
         {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
       </nav>
@@ -43,7 +43,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     </header>
     <main><slot /></main>
     <footer class="site-shell mx-auto rule mt-24 flex flex-col gap-5 py-8 text-xs md:flex-row md:items-center md:justify-between">
-      <span class="muted">© {new Date().getFullYear()} <span data-profile="name">{site.name}</span>（<span data-profile="alias">{site.alias}</span>）。内容来自公开、复核后的笔记。</span>
+      <span class="muted">© {new Date().getFullYear()} <span data-profile="name">{site.name}</span>（<span data-profile="brand">{site.brand}</span>）。内容来自公开、复核后的笔记。</span>
       <div class="flex gap-5 font-semibold tracking-[.12em]">
         <a class="focus-ring" href={site.github} data-profile-href="github">GitHub →</a>
         {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}

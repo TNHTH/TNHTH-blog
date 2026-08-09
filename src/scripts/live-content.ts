@@ -2,7 +2,7 @@ import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { parsePublicDocument, publicStatusLabels } from "../lib/public-content";
 
-const rawBase = "https://raw.githubusercontent.com/TNHTH/tnhth-portfolio/main";
+const rawBase = "https://raw.githubusercontent.com/TNHTH/TNHTH-blog/main";
 
 async function fetchRaw(path: string): Promise<string> {
   const response = await fetch(`${rawBase}/${path}?v=${Date.now()}`, { cache: "no-store" });
@@ -68,7 +68,7 @@ async function syncDocument(article: HTMLElement): Promise<void> {
   if (bodyElement) bodyElement.innerHTML = DOMPurify.sanitize(await marked.parse(body));
   const repoLink = article.querySelector<HTMLAnchorElement>("[data-live-repo]");
   if (repoLink && typeof data.repo === "string") repoLink.href = data.repo;
-  document.title = `${String(data.title ?? "内容")} · TNHTH`;
+  document.title = `${String(data.title ?? "内容")} · TNHTH-blog`;
 }
 
 async function start(): Promise<void> {
