@@ -4,21 +4,43 @@ import ProjectRow from "../components/ProjectRow.astro";
 import { site } from "../../config/site";
 import { getCollection } from "astro:content";
 
-const projects = (await getCollection("work")).filter(({ data }) => data.featured).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const projects = (await getCollection("work"))
+  .filter(({ data }) => data.featured)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
+
 <BaseLayout>
   <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-28 md:pt-24">
     <div>
-      <div class="eyebrow mb-6">{site.location} · {site.headline}</div>
-      <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl">让系统<span class="accent">感知</span>、学习并行动。</h1>
-      <p class="muted mt-8 max-w-xl text-base leading-8">一个关于机器人项目、强化学习实验，以及其背后工程决策的公开笔记本。</p>
+      <div class="eyebrow mb-6"><span data-profile="location">{site.location}</span> · <span data-profile="headline">{site.headline}</span></div>
+      <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl" data-profile="heroTitle">{site.heroTitle}</h1>
+      <p class="muted mt-8 max-w-xl text-base leading-8" data-profile="heroDescription">{site.heroDescription}</p>
       <a class="focus-ring mt-10 inline-flex items-center gap-4 border-b-2 border-[var(--signal)] pb-2 text-sm font-semibold tracking-[.12em]" href="/work">查看精选项目 <span>→</span></a>
     </div>
-    <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3"><div class="eyebrow mb-4">当前</div><p class="m-0">机器人系统<br />强化学习<br />具身智能</p></div>
+    <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3">
+      <div class="eyebrow mb-4">当前方向</div>
+      <p class="m-0">机器人系统<br />强化学习<br />具身智能</p>
+    </div>
   </section>
   <section class="site-shell mx-auto" aria-labelledby="selected-work">
     <div class="mb-2 flex items-end justify-between"><div class="eyebrow" id="selected-work">精选项目</div><span class="muted text-xs">2025—2026</span></div>
-    {projects.length ? projects.map((project, index) => <ProjectRow index={`0${index + 1}`} title={project.data.title} summary={project.data.summary} status={project.data.status} tags={project.data.tags} href={`/work/${project.id}`} />) : <div class="rule py-10 muted">公开项目正在复核准备中。</div>}
+    {projects.length ? projects.map((project, index) => (
+      <ProjectRow
+        index={`0${index + 1}`}
+        title={project.data.title}
+        summary={project.data.summary}
+        status={project.data.status}
+        tags={project.data.tags}
+        href={`/work/${project.id}`}
+        livePath={`src/content/work/${project.id}.md`}
+      />
+    )) : <div class="rule py-10 muted">公开项目正在复核准备中。</div>}
   </section>
-  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]"><div class="eyebrow">持续更新的档案</div><div><p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">这个网站是经过编辑的公开层，原始知识库仍保持私密。</p><a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.12em]" href="/about">了解公开边界 →</a></div></section>
+  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">持续更新的档案</div>
+    <div>
+      <p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">这个网站是经过编辑的公开层，原始知识库始终保持私密。</p>
+      <a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.12em]" href="/about">了解公开边界 →</a>
+    </div>
+  </section>
 </BaseLayout>

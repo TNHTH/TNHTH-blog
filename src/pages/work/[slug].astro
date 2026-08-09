@@ -3,9 +3,25 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 import { statusLabel } from "../../../config/site";
 
-export async function getStaticPaths() { return (await getCollection("work")).map((entry) => ({ params: { slug: entry.id }, props: { entry } })); }
+export async function getStaticPaths() {
+  return (await getCollection("work")).map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const status = statusLabel[entry.data.status];
 ---
-<BaseLayout title={entry.data.title} description={entry.data.summary}><article class="site-shell mx-auto pt-16 md:pt-24"><div class="eyebrow">项目 / {status}</div><h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1><p class="muted mt-7 max-w-2xl text-lg leading-8">{entry.data.summary}</p><div class="mt-9 grid gap-5 border-y border-[var(--line)] py-6 text-sm md:grid-cols-3"><div><div class="eyebrow mb-2">角色</div><div>{entry.data.role}</div></div><div><div class="eyebrow mb-2">状态</div><div>{status}</div></div>{entry.data.repo && <div><div class="eyebrow mb-2">仓库</div><a class="underline" href={entry.data.repo}>打开 GitHub →</a></div>}</div><div class="prose mt-12 max-w-3xl leading-8"><Content /></div></article></BaseLayout>
+
+<BaseLayout title={entry.data.title} description={entry.data.summary}>
+  <article class="site-shell mx-auto pt-16 md:pt-24" data-live-document data-live-path={`src/content/work/${entry.id}.md`}>
+    <div class="eyebrow">项目 / <span data-live-status>{status}</span></div>
+    <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl" data-live-title>{entry.data.title}</h1>
+    <p class="muted mt-7 max-w-2xl text-lg leading-8" data-live-summary>{entry.data.summary}</p>
+    <div class="mt-9 grid gap-5 border-y border-[var(--line)] py-6 text-sm md:grid-cols-3">
+      <div><div class="eyebrow mb-2">角色</div><div data-live-role>{entry.data.role}</div></div>
+      <div><div class="eyebrow mb-2">状态</div><div data-live-status>{status}</div></div>
+      {entry.data.repo && <div><div class="eyebrow mb-2">仓库</div><a class="underline" href={entry.data.repo} data-live-repo>打开 GitHub →</a></div>}
+    </div>
+    <div class="prose mt-12 max-w-3xl leading-8" data-live-body><Content /></div>
+  </article>
+</BaseLayout>

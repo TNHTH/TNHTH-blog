@@ -2,4 +2,24 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { site } from "../../config/site";
 ---
-<BaseLayout title="关于"><section class="site-shell mx-auto grid gap-12 pt-16 md:grid-cols-[1fr_280px] md:pt-24"><div><div class="eyebrow">05 / 关于</div><h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">工作与世界之间的编辑层。</h1></div><div class="self-end text-sm leading-7"><div class="eyebrow mb-3">{site.alias}</div><p class="m-0">{site.location}<br />{site.headline}</p><a class="focus-ring mt-5 inline-block underline" href={site.github}>GitHub →</a></div></section><section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]"><div class="eyebrow">公开边界</div><div class="max-w-3xl text-base leading-8"><p>这个网站是经过筛选的公开层，不是私人知识库的镜像。每一页内容都会在部署前经过人工复核、哈希锁定、敏感信息扫描，并复制到独立公开仓库。</p><p class="muted">个人笔记的真值源留在本地。公开站点只收录能够脱离私人路径、人物信息、凭据和未经验证的结论而独立成立的内容。</p></div></section></BaseLayout>
+
+<BaseLayout title={`关于 ${site.name}`}>
+  <section class="site-shell mx-auto grid gap-12 pt-16 md:grid-cols-[1fr_280px] md:pt-24">
+    <div>
+      <div class="eyebrow">05 / 关于</div>
+      <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl"><span data-profile="name">{site.name}</span>，工作与世界之间的编辑层。</h1>
+    </div>
+    <div class="self-end text-sm leading-7">
+      <div class="eyebrow mb-3" data-profile="alias">{site.alias}</div>
+      <p class="m-0"><span data-profile="location">{site.location}</span><br /><span data-profile="headline">{site.headline}</span></p>
+      <a class="focus-ring mt-5 inline-block underline" href={site.github} data-profile-href="github">GitHub →</a>
+    </div>
+  </section>
+  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">公开边界</div>
+    <div class="max-w-3xl text-base leading-8">
+      <p>这个网站是经过筛选的公开层，不是私人知识库的镜像。每一页内容都会在发布前经过人工复核、内容校验与敏感信息扫描，并复制到独立公开仓库。</p>
+      <p class="muted">个人笔记的真值源留在本地。公开站点只收录能够脱离私人路径、人物信息、凭据和未经验证结论而独立成立的内容。</p>
+    </div>
+  </section>
+</BaseLayout>

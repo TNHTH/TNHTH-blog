@@ -32,7 +32,7 @@ async function validateSnapshot(): Promise<number> {
   await checkFileNames(files);
   const payload = files.filter((file) => {
     const relative = path.relative(projectRoot, file).replaceAll("\\", "/");
-    return relative.startsWith("src/content/") || relative.startsWith("src/assets/") || relative.startsWith("src/data/generated/") || relative.startsWith("public/") || relative === "config/site.ts" || relative === "config/public-repos.yml" || relative === "README.md";
+    return relative.startsWith("src/content/") || relative.startsWith("src/assets/") || relative.startsWith("src/data/generated/") || relative.startsWith("public/") || relative === "src/data/profile.json" || relative === "config/site.ts" || relative === "config/public-repos.yml" || relative === "README.md";
   });
   let checked = 0;
   for (const file of payload) {

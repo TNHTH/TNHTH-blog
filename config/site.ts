@@ -1,11 +1,7 @@
+import profile from "../src/data/profile.json";
+
 export const site = {
-  name: "GUOHAO",
-  alias: "TNHTH",
-  headline: "机器人 · 学习 · 系统",
-  location: "中国 · 杭州",
-  description: "关于机器人系统、强化学习实验与工程笔记的精选公开档案。",
-  github: "https://github.com/TNHTH",
-  email: "",
+  ...profile,
   nav: [
     { label: "项目", href: "/work" },
     { label: "笔记", href: "/notes" },

@@ -6,4 +6,10 @@ import { getCollection } from "astro:content";
 
 const entries = await getCollection("notes");
 ---
-<BaseLayout title="笔记"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="02 / 笔记" title="工作知识" intro="经过第二次审视后公开的概念、公式与系统模式。" /><ContentList base="/notes" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} /></section></BaseLayout>
+
+<BaseLayout title="笔记">
+  <section class="site-shell mx-auto pt-16 md:pt-24">
+    <SectionHeading eyebrow="02 / 笔记" title="工作知识" intro="经过第二次审视后公开的概念、公式与系统模式。" />
+    <ContentList base="/notes" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} />
+  </section>
+</BaseLayout>

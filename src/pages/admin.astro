@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import profile from "../data/profile.json";
+
+const groups = [
+  { label: "项目", collection: "work", entries: await getCollection("work") },
+  { label: "笔记", collection: "notes", entries: await getCollection("notes") },
+  { label: "写作", collection: "writing", entries: await getCollection("writing") },
+];
+const repo = "https://github.com/TNHTH/tnhth-portfolio";
+const commonLink = "focus-ring inline-flex min-h-11 items-center justify-center border px-4 py-2 text-xs font-bold tracking-wider";
+---
+
+<BaseLayout title="内容工作台" description="郭伟浩的站点内容工作台" noindex>
+  <section class="site-shell mx-auto grid gap-10 pt-16 md:grid-cols-[1fr_280px] md:items-end md:pt-24">
+    <div>
+      <div class="eyebrow">郭伟浩的内容工作台</div>
+      <h1 class="display mt-5 max-w-4xl text-6xl leading-[.92] md:text-8xl">快速修改，审核后发布。</h1>
+      <p class="muted mt-7 max-w-2xl leading-8">在这里选择内容，然后前往对应的在线编辑页。修改会先经过自动检查，再由你确认发布。</p>
+    </div>
+    <div class="grid gap-3">
+      <a class={`${commonLink} border-[var(--signal)] bg-[var(--signal)] text-[var(--paper)]`} href={`${repo}/pulls`} target="_blank" rel="noreferrer">查看待审核修改</a>
+      <a class={`${commonLink} border-[var(--line)]`} href={`${repo}/actions`} target="_blank" rel="noreferrer">查看自动检查</a>
+    </div>
+  </section>
+
+  <section class="site-shell mx-auto mt-16 border-t border-[var(--line)] pt-6">
+    <div class="mb-5 flex flex-col items-stretch justify-between gap-6 sm:flex-row sm:items-end">
+      <div><div class="eyebrow">个人资料</div><h2 class="display mt-2 text-5xl leading-none">{profile.name}</h2></div>
+      <a class={`${commonLink} border-[var(--signal)] bg-[var(--signal)] text-[var(--paper)]`} href={`${repo}/edit/main/src/data/profile.json`} target="_blank" rel="noreferrer">编辑资料</a>
+    </div>
+    <p class="muted">{profile.location} · {profile.headline}</p>
+  </section>
+
+  {groups.map((group) => (
+    <section class="site-shell mx-auto mt-16 border-t border-[var(--line)] pt-6">
+      <div class="mb-5 flex items-end justify-between gap-6">
+        <div><div class="eyebrow">公开内容</div><h2 class="display mt-2 text-5xl leading-none">{group.label}</h2></div>
+        <span class="muted">{group.entries.length} 项</span>
+      </div>
+      <div class="border-t border-[var(--line)]">
+        {group.entries.map((entry) => (
+          <article class="grid gap-6 border-b border-[var(--line)] py-6 md:grid-cols-[1fr_auto] md:items-center">
+            <div><h3 class="m-0 text-lg">{entry.data.title}</h3><p class="muted mt-2 max-w-3xl text-sm leading-7">{entry.data.summary}</p></div>
+            <div class="flex w-full gap-3 md:w-auto">
+              <a class={`${commonLink} flex-1 border-[var(--line)]`} href={`/${group.collection}/${entry.id}`} target="_blank">查看</a>
+              <a class={`${commonLink} flex-1 border-[var(--signal)] bg-[var(--signal)] text-[var(--paper)]`} href={`${repo}/edit/main/src/content/${group.collection}/${entry.id}.md`} target="_blank" rel="noreferrer">编辑</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  ))}
+</BaseLayout>

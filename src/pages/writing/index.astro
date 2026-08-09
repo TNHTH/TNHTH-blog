@@ -6,4 +6,10 @@ import { getCollection } from "astro:content";
 
 const entries = await getCollection("writing");
 ---
-<BaseLayout title="写作"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="03 / 写作" title="实践札记" intro="项目复盘、阅读方法，以及会随时间积累的小型工作原则。" /><ContentList base="/writing" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} /></section></BaseLayout>
+
+<BaseLayout title="写作">
+  <section class="site-shell mx-auto pt-16 md:pt-24">
+    <SectionHeading eyebrow="03 / 写作" title="实践札记" intro="项目复盘、阅读方法，以及会随时间积累的小型工作原则。" />
+    <ContentList base="/writing" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} />
+  </section>
+</BaseLayout>

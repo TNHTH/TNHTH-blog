@@ -1,14 +1,15 @@
-# GUOHAO web
+# TNHTH Portfolio
 
-Editorial portfolio and public knowledge layer for robotics, learning systems, and engineering notes.
+郭伟浩的中文个人网站与公开知识层，展示机器人系统、强化学习实验、工程项目和经过复核的笔记。
 
-## Stack
+## 技术栈
 
-- Astro static output with TypeScript and Tailwind CSS.
-- Node.js 24 and pnpm 10.
-- Vercel Git integration: Preview for branches, Production for `main`.
+- Astro 6 静态输出、TypeScript、Tailwind CSS。
+- Node.js 24、pnpm 10。
+- GitHub Actions 对 Pull Request 和 `main` 执行完整检查。
+- Vercel 或兼容静态托管平台负责公开部署。
 
-## Local commands
+## 常用命令
 
 ```text
 pnpm install
@@ -20,61 +21,48 @@ pnpm run ci
 pnpm hooks:install
 ```
 
-`pnpm ci` is reserved by pnpm 10, so the complete project gate is invoked as `pnpm run ci`.
+pnpm 10 将 `pnpm ci` 保留为内置命令，因此本项目的完整交付门使用 `pnpm run ci`。
 
-`pnpm build` verifies the checked-in public snapshot before creating `dist/`. The Vercel build never reads a private vault.
+## 内容工作台
 
-The content and audit commands are:
+构建后访问 `/admin` 可看到中文内容工作台。它集中列出个人资料、项目、笔记和写作，并提供：
+
+- 打开公开页面；
+- 前往对应的 GitHub 在线编辑页；
+- 查看待审核修改；
+- 查看自动检查结果。
+
+工作台本身不接触账号凭据。编辑权限由 GitHub 官方身份验证和仓库权限控制；未获得仓库写入权限的人只能查看公开内容，不能修改或发布。
+
+推荐发布流程：在线编辑时创建新分支与 Pull Request，等待 `Public snapshot and site checks` 通过，人工复核差异后再合并。公开页面会读取 `main` 分支中的最新资料和既有文章内容；新增路由仍需经过常规代码发布。
+
+## 公开快照流程
+
+私有内容在本仓库之外审核。精确清单记录来源、集合、slug、正文哈希、风险等级和获准附件哈希；同步脚本只把通过审核的快照写入 `src/content` 与 `src/assets`。
 
 ```text
-pnpm content:sync     # local-only: generate a reviewed snapshot from the vault
-pnpm content:verify   # verify the checked-in snapshot
-pnpm audit:public     # scan public files for secrets, PII, paths, and private links
-pnpm sync:github      # refresh metadata for the exact repositories in config/public-repos.yml
-pnpm run ci           # the complete local delivery gate
+私有来源 → 精确清单与 Frontmatter → 哈希检查 → 公开扫描 → 快照 → 构建
 ```
 
-## Public snapshot flow
-
-The private source is reviewed outside this repository. A versioned allowlist entry stores the source path, collection, slug, content hash, risk tier, and approved asset hashes. The local sync command reads the private policy through `PUBLISH_POLICY`, strips internal metadata, rejects private links and secrets, then writes only a public snapshot into `src/content` and `src/assets`.
+内容相关命令：
 
 ```text
-private source → allowlist + frontmatter → hash check → public audit → snapshot → build
+pnpm content:sync     # 本地执行：从已审批来源生成公开快照
+pnpm content:verify   # 验证已提交的公开快照
+pnpm audit:public     # 扫描秘密、个人信息、路径和私人链接
+pnpm sync:github      # 只更新明确列出的公开仓库元数据
+pnpm run ci           # 完整交付门
 ```
 
-Required source fields:
+高风险派生文档还必须包含 `publicVersion: true` 与 `sanitized: true`。正文或附件哈希发生变化、Frontmatter 缺失、Obsidian 链接未解析、附件未批准或安全扫描失败时，同步会立即终止。
 
-```yaml
-publish: true
-visibility: public
-title: A public title
-summary: A short public summary
-date: 2026-08-08
-type: note
-```
+## 安全边界
 
-High-risk derived notes also require `publicVersion: true` and `sanitized: true`.
+不得把私人知识库、审批清单、凭据、本地路径、原始日记、HR 材料、内部汇报、未脱敏工作资料或未批准媒体复制进本仓库。公开校验器会拒绝秘密、私人路径、Obsidian 内部链接、违规文件类型和字段不完整的项目内容。
 
-To publish locally, provide the vault and private policy only in the current shell. The sync command fails closed when `VAULT_ROOT` is absent, and it never writes the policy into this repository:
+撤回文章时，从私有审批清单移除对应项，重新同步，检查差异并运行 `pnpm run ci`。公开快照是唯一可部署内容，托管平台无法读取或恢复私人知识库。
 
-```powershell
-$env:VAULT_ROOT = "<private-vault-root>"
-$env:PUBLISH_POLICY = "<private-vault-root>\\90_系统\\个人网站发布配置\\publish-allowlist.yml"
-pnpm content:sync
-pnpm run ci
-```
-
-The allowlist records the exact source hash and approved asset hashes. A changed source, missing frontmatter, unresolved Obsidian link, unsafe attachment, or failed scan stops before the public snapshot is replaced. Re-approval means reviewing the changed source, updating its hash in the private policy, and running the same two commands again.
-
-To remove an article from the public site, delete its allowlist entry, run `pnpm content:sync`, review the resulting diff, and then run `pnpm run ci`. The public snapshot is the only deployable content; Vercel cannot recover removed content from the private vault.
-
-## Safety boundary
-
-Do not copy the private vault, approval policy, credentials, local paths, raw diary entries, HR material, internal reports, or unapproved media into this repository. The validator is intentionally fail-closed for secrets, private paths, Obsidian links, forbidden file types, and incomplete Work evidence.
-
-## Vercel
-
-Import this repository as an Astro project with:
+## 部署参数
 
 ```text
 Build command: pnpm build
@@ -82,6 +70,4 @@ Output directory: dist
 Production branch: main
 ```
 
-Set `PUBLIC_SITE_URL` in the Vercel project when a canonical domain is available. No vault path or GitHub token is needed at build time.
-
-Keep the GitHub repository private until the first full scan and production Preview review. Use `main` as the only production branch; protect Preview deployments with Vercel Standard Protection before sharing them.
+托管环境不需要私人知识库路径或 GitHub 写入凭据。自定义域名可通过 `PUBLIC_SITE_URL` 配置 canonical URL。

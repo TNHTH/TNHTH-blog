@@ -2,8 +2,19 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, render } from "astro:content";
 
-export async function getStaticPaths() { return (await getCollection("writing")).map((entry) => ({ params: { slug: entry.id }, props: { entry } })); }
+export async function getStaticPaths() {
+  return (await getCollection("writing")).map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 ---
-<BaseLayout title={entry.data.title} description={entry.data.summary}><article class="site-shell mx-auto pt-16 md:pt-24"><div class="eyebrow">写作 / {entry.data.category}</div><h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1><p class="muted mt-7 max-w-2xl text-lg leading-8">{entry.data.summary}</p><div class="prose mt-12 max-w-3xl leading-8"><Content /></div></article></BaseLayout>
+
+<BaseLayout title={entry.data.title} description={entry.data.summary}>
+  <article class="site-shell mx-auto pt-16 md:pt-24" data-live-document data-live-path={`src/content/writing/${entry.id}.md`}>
+    <div class="eyebrow">写作 / <span data-live-category>{entry.data.category}</span></div>
+    <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl" data-live-title>{entry.data.title}</h1>
+    <p class="muted mt-7 max-w-2xl text-lg leading-8" data-live-summary>{entry.data.summary}</p>
+    <div class="prose mt-12 max-w-3xl leading-8" data-live-body><Content /></div>
+  </article>
+</BaseLayout>
