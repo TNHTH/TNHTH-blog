@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
@@ -74,11 +74,20 @@ export default {
 `;
 
 await writeFile(path.join(serverRoot, "index.js"), runtime, "utf8");
-await mkdir(path.join(distRoot, ".openai"), { recursive: true });
-await writeFile(
-  path.join(distRoot, ".openai", "hosting.json"),
-  JSON.stringify({ project_id: "appgprj_6a774e6938688191806a66573cff9a80" }, null, 2) + "\n",
-  "utf8",
-);
+let projectId = process.env.OPENAI_SITES_PROJECT_ID;
+try {
+  const localHosting = JSON.parse(await readFile(path.join(projectRoot, ".openai", "hosting.json"), "utf8"));
+  if (typeof localHosting.project_id === "string" && localHosting.project_id) projectId = localHosting.project_id;
+} catch {
+  // Public CI and remote Sites builds do not need a local project binding.
+}
+
+const distHosting = path.join(distRoot, ".openai");
+if (projectId) {
+  await mkdir(distHosting, { recursive: true });
+  await writeFile(path.join(distHosting, "hosting.json"), JSON.stringify({ project_id: projectId }, null, 2) + "\n", "utf8");
+} else {
+  await rm(distHosting, { recursive: true, force: true });
+}
 
 console.log("Sites runtime prepared: dist/server/index.js");
