@@ -10,18 +10,29 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const status = statusLabel[entry.data.status];
+const contextualFields = [
+  ["问题", entry.data.problem],
+  ["背景", entry.data.context],
+  ["结果", entry.data.result],
+].filter(([, value]) => value);
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.summary}>
-  <article class="site-shell mx-auto pt-16 md:pt-24" data-live-document data-live-path={`src/content/work/${entry.id}.md`}>
-    <div class="eyebrow">项目 / <span data-live-status>{status}</span></div>
-    <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl" data-live-title>{entry.data.title}</h1>
-    <p class="muted mt-7 max-w-2xl text-lg leading-8" data-live-summary>{entry.data.summary}</p>
+  <article class="site-shell mx-auto pt-16 md:pt-24">
+    <div class="eyebrow">项目 / <span>{status}</span></div>
+    <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1>
+    <p class="muted mt-7 max-w-2xl text-lg leading-8">{entry.data.summary}</p>
     <div class="mt-9 grid gap-5 border-y border-[var(--line)] py-6 text-sm md:grid-cols-3">
-      <div><div class="eyebrow mb-2">角色</div><div data-live-role>{entry.data.role}</div></div>
-      <div><div class="eyebrow mb-2">状态</div><div data-live-status>{status}</div></div>
-      {entry.data.repo && <div><div class="eyebrow mb-2">仓库</div><a class="underline" href={entry.data.repo} data-live-repo>打开 GitHub →</a></div>}
+      <div><div class="eyebrow mb-2">角色</div><div>{entry.data.role}</div></div>
+      <div><div class="eyebrow mb-2">状态</div><div>{status}</div></div>
+      {entry.data.repo && <div><div class="eyebrow mb-2">仓库</div><a class="underline" href={entry.data.repo} target="_blank" rel="noreferrer">打开 GitHub →</a></div>}
     </div>
-    <div class="prose mt-12 max-w-3xl leading-8" data-live-body><Content /></div>
+    {contextualFields.length > 0 && <section class="mt-12 grid gap-6 border-b border-[var(--line)] pb-10 md:grid-cols-3" aria-label="项目上下文">{contextualFields.map(([label, value]) => <div><div class="eyebrow mb-2">{label}</div><p class="m-0 leading-8">{value}</p></div>)}</section>}
+    <section class="mt-12 grid gap-10 md:grid-cols-[1fr_2fr]" aria-label="项目贡献与限制">
+      <div><div class="eyebrow mb-3">贡献</div><ul class="m-0 grid gap-3 pl-5 text-sm leading-7">{entry.data.contribution.map((item) => <li>{item}</li>)}</ul>{entry.data.constraints.length > 0 && <><div class="eyebrow mb-3 mt-8">约束</div><ul class="m-0 grid gap-3 pl-5 text-sm leading-7">{entry.data.constraints.map((item) => <li>{item}</li>)}</ul></>}</div>
+      <div class="prose max-w-3xl leading-8"><Content /></div>
+    </section>
+    {entry.data.evidence.length > 0 && <section class="mt-12 border-t border-[var(--line)] pt-6"><div class="eyebrow mb-3">Evidence</div><p class="muted text-sm leading-7">{entry.data.evidence.join(" · ")}</p></section>}
+    {entry.data.limitations.length > 0 && <section class="mt-8 border-t border-[var(--line)] pt-6"><div class="eyebrow mb-3">Limitations</div><ul class="m-0 grid gap-2 pl-5 text-sm leading-7">{entry.data.limitations.map((item) => <li>{item}</li>)}</ul></section>}
   </article>
 </BaseLayout>

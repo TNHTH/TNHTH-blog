@@ -4,8 +4,7 @@
 
 ## 快速链接
 
-- [公开网站](https://tnhth-blog.honest-civet-7225.chatgpt.site)
-- [内容工作台（/admin）](https://tnhth-blog.honest-civet-7225.chatgpt.site/admin)
+- [内容工作台（/admin）](/admin)
 - [GitHub 仓库](https://github.com/TNHTH/TNHTH-blog)
 - [GitHub Actions](https://github.com/TNHTH/TNHTH-blog/actions)
 - [Issues](https://github.com/TNHTH/TNHTH-blog/issues)
@@ -16,7 +15,7 @@
 - Astro 6 静态输出、TypeScript、Tailwind CSS
 - Node.js 24、pnpm 10
 - GitHub Actions 执行公开扫描、类型检查、测试和生产构建
-- OpenAI Sites 托管公开快照；构建环境不读取私人 vault
+- Vercel 托管 Astro 静态快照；构建环境不读取私人 vault
 
 ## 常用命令
 
@@ -25,6 +24,7 @@ pnpm install
 pnpm dev
 pnpm check
 pnpm test
+pnpm test:e2e
 pnpm build
 pnpm run ci
 pnpm hooks:install
@@ -52,6 +52,13 @@ pnpm hooks:install
 
 ```text
 pnpm content:sync     # 从已审批来源生成公开快照
+pnpm publish:plan     # 查看审批清单
+pnpm publish:approve  # 显式批准指定来源
+pnpm publish:sync     # 同步已批准快照
+pnpm publish:verify   # 验证公开快照
+pnpm publish:revoke   # 撤回并保留审计记录
+pnpm privacy:text     # 扫描公开文本
+pnpm privacy:media    # 扫描公开媒体 derivative
 pnpm content:verify   # 校验已提交快照
 pnpm audit:public     # 扫描秘密、个人信息、路径和私有链接
 pnpm sync:github      # 只读取 config/public-repos.yml 中的仓库
@@ -64,7 +71,7 @@ pnpm run ci           # 完整交付门
 
 - `main` 是唯一生产分支；Pull Request 只生成预览或等待检查。
 - 发布必须使用已经通过 `pnpm run ci` 的精确提交，不部署未提交内容。
-- 站点 canonical 由 `PUBLIC_SITE_URL` 控制，默认值为公开网站地址。
+- 站点 canonical 由 `PUBLIC_SITE_URL` 控制；部署时必须显式设置为 Vercel 项目地址。
 - 管理页设置为 `noindex`，编辑入口始终指向 `https://github.com/TNHTH/TNHTH-blog`。
 
 ## 许可证与内容使用

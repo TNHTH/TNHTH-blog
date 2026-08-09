@@ -1,14 +1,15 @@
-name: Public snapshot and site checks
+name: Browser acceptance
 
 on:
   pull_request:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
-  verify:
-    permissions:
-      contents: read
+  e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -20,6 +21,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run ci
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
         env:
           PUBLIC_SITE_URL: https://example.invalid
