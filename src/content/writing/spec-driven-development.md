@@ -1,22 +1,22 @@
 ---
-title: BDD → SDD → TDD for Small Systems
-summary: A lightweight development loop that turns an ambiguous request into observable behavior, explicit contracts, and tests.
+title: BDD → SDD → TDD：小型系统的规格化开发
+summary: 一个轻量开发闭环，把模糊需求变成可观察行为、明确契约和可执行测试。
 date: 2026-05-13
-tags: [engineering practice, testing, workflow]
+tags: [工程实践, 测试, 工作流]
 type: writing
-category: engineering practice
+category: 工程实践
 ---
 
-## Three questions
+## 三个问题
 
-BDD asks: what should the user experience?
+BDD 问：用户应该体验到什么？
 
-SDD asks: what inputs, outputs, and failure states cross the module boundary?
+SDD 问：哪些输入、输出和失败状态会跨过模块边界？
 
-TDD asks: what is the smallest test that proves the contract?
+TDD 问：证明这个契约成立所需的最小测试是什么？
 
 ```text
-behavior → contract → test → implementation → refactor
+行为 → 契约 → 测试 → 实现 → 重构
 ```
 
-This is not a ceremony checklist. It is a way to make the next failure legible. For a content publishing pipeline, that means testing both a valid public note and a rejected private path before adding more pages.
+这不是一份仪式化清单，而是让下一次失败变得可解释的方法。对于内容发布流水线，它意味着在增加页面之前，既要测试一个有效的公开笔记，也要测试一个被拒绝的私人路径。

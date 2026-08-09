@@ -1,34 +1,34 @@
 ---
-title: Leap / A20 Fire Inspection Robot
-summary: A ROS2 and embedded platform for autonomous inspection, fire detection, and vehicle-level control experiments.
+title: Leap / A20 消防巡检机器人
+summary: 一个用于自主巡检、火情检测与整车控制实验的 ROS2 和嵌入式平台。
 date: 2026-06-02
-tags: [ROS2, embedded, inspection robot, navigation]
+tags: [ROS2, 嵌入式, 巡检机器人, 导航]
 type: project
 status: partial
-role: Robot software integration and system documentation
+role: 机器人软件集成与系统文档
 contribution:
-  - Connected firmware, ROS2 nodes, and vehicle control interfaces.
-  - Organized the inspection workflow around observable system states.
-  - Documented the boundary between platform capability and demonstrated behavior.
+  - 连接固件、ROS2 节点和车辆控制接口。
+  - 围绕可观测系统状态组织巡检流程。
+  - 记录平台能力与已演示行为之间的边界。
 evidence: [EV-LEAP-COMMIT-001, EV-LEAP-DOC-001]
 repo: https://github.com/TNHTH/leap
 featured: true
 ---
 
-## Overview
+## 概览
 
-Leap is the software platform around an A20 inspection vehicle. It brings embedded control, ROS2 communication, navigation, and a browser-facing control surface into one project story.
+Leap 是 A20 巡检车辆的软件平台，将嵌入式控制、ROS2 通信、导航和面向浏览器的控制界面放在同一个项目故事中。
 
-## The engineering thread
+## 工程主线
 
-The system is easiest to reason about as a chain of contracts:
+把系统看成一组相互衔接的契约最容易理解：
 
 ```text
-firmware → ROS2 transport → vehicle state → inspection behavior → operator feedback
+固件 → ROS2 传输 → 车辆状态 → 巡检行为 → 操作员反馈
 ```
 
-The important work is making those contracts explicit enough to debug when a physical robot does not behave like a diagram.
+重要的工作是让这些契约足够明确，以便真实机器人与架构图不一致时能够定位问题。
 
-## Current boundary
+## 当前边界
 
-The project is documented as a partial, evolving system. This page describes the integration direction and verified interfaces; it does not claim a production-ready autonomous inspection product.
+该项目被记录为一个阶段性、持续演进的系统。页面描述已验证的集成方向和接口，不宣称它已经是可生产使用的自主巡检产品。

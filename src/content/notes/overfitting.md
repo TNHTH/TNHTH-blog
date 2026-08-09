@@ -1,28 +1,28 @@
 ---
-title: Overfitting as a Generalization Gap
-summary: A compact diagnostic guide for separating memorization from useful learning.
+title: 把过拟合看作泛化差距
+summary: 一份简洁的诊断指南，用来区分记忆训练集与真正有用的学习。
 date: 2026-02-11
-tags: [machine learning, evaluation, training]
+tags: [机器学习, 评估, 训练]
 type: note
-category: machine learning
+category: 机器学习
 ---
 
-Overfitting is not simply “a large model.” It is the situation where training performance keeps improving while performance on unseen data stops improving or gets worse.
+过拟合不是简单的“模型太大”，而是训练集表现继续变好、未见数据表现停止变好甚至变差的情况。
 
-## Diagnostic pattern
+## 诊断模式
 
 ```text
-training loss ↓ + validation loss ↑ = investigate generalization
+训练损失下降 → 验证损失上升 → 需要检查泛化
 ```
 
-The gap can come from model capacity, limited data, noisy labels, leakage in the split, or a training schedule that runs past the useful point.
+差距可能来自模型容量过大、数据有限、标签噪声、数据切分泄漏，或训练计划超过了有效区间。
 
-## Response matrix
+## 应对矩阵
 
-- Improve the data split before tuning the model.
-- Add data or augmentation when the data distribution is narrow.
-- Reduce capacity when the model can memorize individual examples.
-- Use regularization, dropout, or early stopping when the validation curve supports it.
-- Report the gap and the evaluation protocol, not only the best training score.
+- 在调模型之前，先检查数据切分是否合理。
+- 当数据分布过窄时，增加数据或进行增强。
+- 当模型能够记住单个样本时，降低模型容量。
+- 当验证曲线支持这一判断时，使用正则化、Dropout 或提前停止。
+- 报告训练与验证之间的差距，以及完整评估协议，而不只是最好的训练分数。
 
-The important habit is to treat the validation curve as evidence about transfer, not as a decorative plot.
+重要的习惯是把验证曲线当作迁移能力的证据，而不是装饰性的图表。

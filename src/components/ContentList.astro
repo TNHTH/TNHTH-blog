@@ -6,10 +6,10 @@ const { items, base } = Astro.props;
 <div class="grid gap-0 md:grid-cols-2 md:gap-x-10">
   {items.map((item) => (
     <a class="focus-ring rule group block py-7" href={`${base}/${item.slug}`}>
-      <div class="flex items-center justify-between gap-4 text-[.68rem] font-semibold uppercase tracking-[.1em]"><span class="accent">{item.date.toLocaleDateString("en-GB", { year: "numeric", month: "short" })}</span><span class="muted">Read ↗</span></div>
+      <div class="flex items-center justify-between gap-4 text-[.68rem] font-semibold tracking-[.1em]"><span class="accent">{item.date.toLocaleDateString("zh-CN", { year: "numeric", month: "long" })}</span><span class="muted">阅读 →</span></div>
       <h2 class="display mt-4 text-3xl transition-transform duration-300 group-hover:translate-x-1">{item.title}</h2>
       <p class="muted mt-3 text-sm leading-7">{item.summary}</p>
-      <div class="mt-4 flex flex-wrap gap-2 text-[.68rem] font-semibold uppercase tracking-[.1em]">{item.tags.map((tag) => <span class="border border-[var(--line)] px-2 py-1">{tag}</span>)}</div>
+      <div class="mt-4 flex flex-wrap gap-2 text-[.68rem] font-semibold tracking-[.1em]">{item.tags.map((tag) => <span class="border border-[var(--line)] px-2 py-1">{tag}</span>)}</div>
     </a>
   ))}
 </div>

@@ -1,32 +1,32 @@
 ---
-title: DashGo RL Navigation
-summary: An Isaac Lab navigation experiment that connects LiDAR observations, a recurrent policy, and a real robot validation loop.
+title: DashGo 强化学习导航
+summary: 一个 Isaac Lab 导航实验，将激光雷达观测、循环策略与真实机器人验证闭环连接起来。
 date: 2026-06-02
-tags: [Isaac Lab, reinforcement learning, LiDAR, ROS2]
+tags: [Isaac Lab, 强化学习, LiDAR, ROS2]
 type: project
 status: ongoing
-role: Reinforcement-learning system integration and evaluation
+role: 强化学习系统集成与评估
 contribution:
-  - Adapted the training environment and observation pipeline.
-  - Integrated policy outputs with the navigation runtime.
-  - Added evaluation notes that keep weak success rates visible.
+  - 调整训练环境与观测数据管线。
+  - 将策略输出接入导航运行时。
+  - 补充评估记录，保留较低成功率等限制信息。
 evidence: [EV-DG-RL-COMMIT-001, EV-DG-RL-TEST-001]
 repo: https://github.com/TNHTH/dashgo-rl-navigation
 featured: true
 ---
 
-## Why it exists
+## 为什么做它
 
-DashGo is a small differential-drive platform for testing whether a learned navigation policy can move from simulation assumptions toward a physical robot.
+DashGo 是一台用于验证学习式导航策略的小型差速平台，目标是观察策略能否从仿真假设逐步走向真实机器人。
 
-## System shape
+## 系统形态
 
 ```text
-LiDAR → observation encoder → policy → velocity command → robot feedback
+激光雷达 → 观测编码器 → 策略 → 速度指令 → 机器人反馈
 ```
 
-The useful engineering problem is not only training. It is keeping simulation configuration, observation semantics, action limits, and runtime behavior aligned.
+真正有价值的工程问题不只是训练策略，而是让仿真配置、观测语义、动作限制与运行时行为保持一致。
 
-## Current boundary
+## 当前边界
 
-This is an active experiment. The current evidence supports the architecture and evaluation workflow, but does not support a claim of convergence or reliable deployment. The public page keeps the low success-rate results visible because failure analysis is part of the work.
+这是一个正在进行的实验。现有证据支持系统架构和评估流程，但不足以支持“已经收敛”或“可以稳定部署”的结论。公开页面保留低成功率结果，因为失败分析本身就是工作的一部分。

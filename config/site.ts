@@ -1,18 +1,25 @@
 export const site = {
   name: "GUOHAO",
   alias: "TNHTH",
-  headline: "Robotics · Learning · Systems",
-  location: "Hangzhou, China",
-  description: "A curated portfolio of robotics systems, reinforcement learning experiments, and technical notes.",
+  headline: "机器人 · 学习 · 系统",
+  location: "中国 · 杭州",
+  description: "关于机器人系统、强化学习实验与工程笔记的精选公开档案。",
   github: "https://github.com/TNHTH",
   email: "",
   nav: [
-    { label: "Work", href: "/work" },
-    { label: "Notes", href: "/notes" },
-    { label: "Writing", href: "/writing" },
-    { label: "Gallery", href: "/gallery" },
-    { label: "About", href: "/about" },
+    { label: "项目", href: "/work" },
+    { label: "笔记", href: "/notes" },
+    { label: "写作", href: "/writing" },
+    { label: "图库", href: "/gallery" },
+    { label: "关于", href: "/about" },
   ],
+} as const;
+
+export const statusLabel = {
+  ongoing: "进行中",
+  partial: "阶段性",
+  reproduction: "复现适配",
+  complete: "已完成",
 } as const;
 
 export type Site = typeof site;

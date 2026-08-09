@@ -7,7 +7,7 @@ const { title = site.name, description = site.description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
 ---
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -16,28 +16,28 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <title>{title} — {site.alias}</title>
+    <title>{title} · {site.alias}</title>
   </head>
   <body class="m-0">
     <header class="site-shell mx-auto flex items-center justify-between py-6 md:py-8">
       <a class="focus-ring display text-xl" href="/">{site.name}<span class="accent">.</span></a>
-      <nav aria-label="Primary navigation" class="hidden gap-5 text-xs font-semibold tracking-[.12em] uppercase md:flex">
+      <nav aria-label="主导航" class="hidden gap-5 text-xs font-semibold tracking-[.12em] md:flex">
         {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
       </nav>
       <details class="relative md:hidden">
-        <summary class="focus-ring cursor-pointer list-none p-2 text-xs font-semibold tracking-[.12em] uppercase">Menu</summary>
-        <nav aria-label="Mobile navigation" class="absolute right-0 z-10 grid min-w-40 gap-3 border border-[var(--line)] bg-[var(--paper)] p-4 text-xs font-semibold tracking-[.12em] uppercase shadow-lg">
+        <summary class="focus-ring cursor-pointer list-none p-2 text-xs font-semibold tracking-[.12em]">菜单</summary>
+        <nav aria-label="移动端导航" class="absolute right-0 z-10 grid min-w-40 gap-3 border border-[var(--line)] bg-[var(--paper)] p-4 text-xs font-semibold tracking-[.12em] shadow-lg">
           {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
         </nav>
       </details>
-      <button id="theme-toggle" class="focus-ring border-0 bg-transparent p-2 text-xs font-semibold" type="button" aria-label="Toggle color theme">◐</button>
+      <button id="theme-toggle" class="focus-ring border-0 bg-transparent p-2 text-xs font-semibold" type="button" aria-label="切换明暗主题">☼</button>
     </header>
     <main><slot /></main>
     <footer class="site-shell mx-auto rule mt-24 flex flex-col gap-5 py-8 text-xs md:flex-row md:items-center md:justify-between">
-      <span class="muted">© {new Date().getFullYear()} {site.alias}. Built from public, reviewed notes.</span>
-      <div class="flex gap-5 font-semibold uppercase tracking-[.12em]">
-        <a class="focus-ring" href={site.github}>GitHub ↗</a>
-        {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>Email ↗</a>}
+      <span class="muted">© {new Date().getFullYear()} {site.alias}。内容来自公开、复核后的笔记。</span>
+      <div class="flex gap-5 font-semibold tracking-[.12em]">
+        <a class="focus-ring" href={site.github}>GitHub →</a>
+        {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}
       </div>
     </footer>
     <script is:inline>

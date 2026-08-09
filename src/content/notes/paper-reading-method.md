@@ -1,21 +1,21 @@
 ---
-title: A Method for Reading Technical Papers
-summary: Read for problem, mechanism, evidence, and failure cases instead of collecting summaries.
+title: 技术论文阅读方法
+summary: 围绕问题、机制、证据与失败案例阅读，而不是收集一段段摘要。
 date: 2026-05-08
-tags: [research, reading, robotics]
+tags: [研究, 阅读, 机器人学]
 type: note
-category: research practice
+category: 研究方法
 ---
 
-## Start with the problem
+## 先写清问题
 
-Before reading the method, write down the problem the paper claims to solve and the setting in which that problem matters. If the setting changes, the contribution may not transfer.
+在阅读方法之前，先写下论文声称要解决的问题，以及这个问题成立的场景。如果场景发生变化，论文的贡献可能就无法迁移。
 
-## Read in four passes
+## 分四遍阅读
 
-1. Identify the question, assumptions, and baseline.
-2. Decompose the method into inputs, transformations, outputs, and interfaces.
-3. Reconstruct the experiment: comparison, metric, data, and ablation.
-4. Record limitations and what would break on a real robot.
+1. 找出研究问题、前提假设和基线。
+2. 把方法拆成输入、变换、输出和接口。
+3. 重建实验：比较对象、指标、数据与消融实验。
+4. 记录限制条件，以及在真实机器人上可能失效的环节。
 
-The goal is not to remember every layer. It is to understand why the design exists, which evidence supports it, and where the evidence stops.
+目标不是记住每一层网络，而是理解设计为什么存在、哪些证据支持它，以及证据在哪里停止。

@@ -1,33 +1,33 @@
 ---
-title: Differential Drive vs. Ackermann Steering
-summary: A practical way to connect wheel geometry, non-holonomic constraints, and controller choice.
+title: 差速驱动与阿克曼转向
+summary: 用一个实用框架连接车轮几何、非完整约束与控制器选择。
 date: 2026-02-10
-tags: [mobile robotics, kinematics, control]
+tags: [移动机器人, 运动学, 控制]
 type: note
-category: robotics
+category: 机器人学
 ---
 
-## The short version
+## 先说结论
 
-Differential drive turns by changing the left and right wheel velocities. Ackermann steering turns by changing front-wheel angles so the wheel axes meet at a common instantaneous center of curvature.
+差速底盘通过改变左右轮速度转向；阿克曼底盘通过改变前轮转角转向，让各车轮轴线汇聚到同一个瞬时曲率中心。
 
-For a differential-drive base with wheel separation `L`:
+对于轮距为 `L` 的差速底盘：
 
 ```text
-vR = v + ωL/2
-vL = v - ωL/2
+v_R = v + ωL/2
+v_L = v - ωL/2
 ```
 
-The model is simple, but the physical platform still has wheel slip, actuator mismatch, and floor-dependent behavior.
+模型虽然简单，但真实平台仍然会受到轮胎打滑、执行器不一致和地面材质的影响。
 
-Ackermann steering instead uses a curvature relationship:
+阿克曼转向使用曲率关系：
 
 ```text
 R = L / tan(δ)
 ```
 
-That makes high-speed motion stable, but introduces a minimum turning radius and a stronger path-curvature constraint.
+它更适合高速、稳定的车辆运动，但会引入最小转弯半径和更严格的路径曲率约束。
 
-## Choosing a model
+## 如何选择模型
 
-Use differential drive when tight turns, indoor maneuverability, and simple actuation dominate. Use Ackermann when speed, rolling efficiency, and vehicle-like motion dominate. The controller should respect the mechanics rather than pretend both platforms share the same action space.
+当原地转向、室内机动性和简单执行机构更重要时，选择差速驱动；当速度、滚动效率和车辆式运动更重要时，选择阿克曼转向。控制器应当尊重机械结构，而不是假设两种平台拥有相同的动作空间。
