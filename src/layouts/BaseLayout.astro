@@ -31,23 +31,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <title>{title} · {site.brand}</title>
   </head>
   <body class="m-0">
-    <header data-pagefind-ignore class="site-shell mx-auto flex items-center justify-between py-6 md:py-8">
+    <header data-pagefind-ignore class="site-shell mx-auto flex items-center justify-between py-5 md:py-6">
       <a class="focus-ring display text-xl" href="/"><span data-profile="brand">{site.brand}</span><span class="accent">.</span></a>
-      <nav aria-label="主导航" class="hidden gap-5 text-xs font-semibold tracking-[.12em] md:flex">
+      <nav aria-label="主导航" class="hidden gap-6 text-sm md:flex">
         {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
       </nav>
       <details class="relative md:hidden">
-        <summary class="focus-ring cursor-pointer list-none p-2 text-xs font-semibold tracking-[.12em]">菜单</summary>
-        <nav aria-label="移动端导航" class="absolute right-0 z-10 grid min-w-40 gap-3 border border-[var(--line)] bg-[var(--paper)] p-4 text-xs font-semibold tracking-[.12em] shadow-lg">
+        <summary class="focus-ring cursor-pointer list-none p-2 text-sm">菜单</summary>
+        <nav aria-label="移动端导航" class="absolute right-0 z-10 grid min-w-40 gap-3 border border-[var(--line)] bg-[var(--paper)] p-4 text-sm shadow-lg">
           {site.nav.map((item) => <a class="focus-ring" href={item.href}>{item.label}</a>)}
         </nav>
       </details>
-      <button id="theme-toggle" class="focus-ring border-0 bg-transparent p-2 text-xs font-semibold" type="button" aria-label="切换明暗主题">◐</button>
+      <button id="theme-toggle" class="focus-ring border-0 bg-transparent p-2 text-sm" type="button" aria-label="切换明暗主题">◐</button>
     </header>
     <main data-pagefind-body><slot /></main>
     <footer data-pagefind-ignore class="site-shell mx-auto rule mt-24 flex flex-col gap-5 py-8 text-xs md:flex-row md:items-center md:justify-between">
-      <span class="muted">© {new Date().getFullYear()} <span data-profile="name">{site.name}</span>（<span data-profile="brand">{site.brand}</span>）。内容来自公开、复核后的笔记。</span>
-      <div class="flex gap-5 font-semibold tracking-[.12em]">
+      <span class="muted">© {new Date().getFullYear()} <span data-profile="name">{site.name}</span> · <span data-profile="brand">{site.brand}</span></span>
+      <div class="flex gap-5 text-sm">
         <a class="focus-ring" href={site.github} data-profile-href="github">GitHub →</a>
         {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}
       </div>

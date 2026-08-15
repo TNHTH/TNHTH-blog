@@ -2,11 +2,12 @@
   "name": "郭伟浩",
   "brand": "TNHTH-blog",
   "alias": "TNHTH",
-  "headline": "机器人 · 强化学习 · 系统工程",
-  "location": "中国 · 杭州",
-  "description": "郭伟浩的机器人系统、强化学习实验与工程笔记。",
-  "heroTitle": "让系统感知、学习并行动。",
-  "heroDescription": "记录机器人项目、强化学习实验，以及其背后的工程判断与实现边界。",
+  "headline": "杭州电子科技大学 · 自动化",
+  "location": "杭州 · 自动化",
+  "description": "记录做过的项目、学过的东西，以及过程中值得留下的实验与思考。",
+  "heroTitle": "郭伟浩",
+  "heroDescription": "我目前在杭州电子科技大学学习自动化。这里记录我做过的项目、学过的东西，以及过程中值得留下的实验与思考。",
+  "practice": ["机器人系统", "控制与运动学", "强化学习", "ROS 2 与嵌入式", "摄影与记录"],
   "github": "https://github.com/TNHTH/TNHTH-blog",
   "email": ""
 }

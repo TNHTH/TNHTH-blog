@@ -18,50 +18,33 @@ const galaxy = buildGalaxyModel(projects, notes);
 
 <BaseLayout>
   <main>
-    <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-24 md:pt-24">
-      <div>
-        <div class="eyebrow mb-6">{site.location} · {site.headline}</div>
-        <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl">{site.heroTitle}</h1>
-        <p class="muted mt-8 max-w-xl text-base leading-8">{site.heroDescription}</p>
-        <div class="mt-10 flex flex-wrap gap-6 text-sm font-semibold tracking-[.08em]">
-          <a class="focus-ring border-b-2 border-[var(--signal)] pb-2" href="/projects">查看项目 <span aria-hidden="true">→</span></a>
-          <a class="focus-ring border-b border-[var(--line)] pb-2" href="/about">关于我 <span aria-hidden="true">→</span></a>
-        </div>
+    <section class="site-shell home-hero mx-auto">
+      <div class="home-hero-copy">
+        <div class="eyebrow mb-5">{site.location}</div>
+        <h1 class="display home-hero-name m-0">{site.heroTitle}</h1>
+        <p class="home-hero-description mt-7">{site.heroDescription}</p>
+        <p class="home-hero-meta mt-7 m-0">{site.practice?.join(" / ")}</p>
       </div>
-      <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3">
-        <div class="eyebrow mb-4">公开层</div>
-        <p class="m-0">项目、笔记<br />以及它们之间的关系。</p>
+      <div class="home-hero-galaxy" aria-label="项目、笔记和主题的关系图">
+        {projects.length || notes.length ? <GalaxyGraph nodes={galaxy.nodes} edges={galaxy.edges} /> : <EmptyState title="当前暂无公开内容" description="项目和笔记发布后，关系图会在这里出现。" />}
       </div>
     </section>
 
-    <section class="site-shell mx-auto border-t border-[var(--line)] pt-8" aria-labelledby="galaxy-heading">
-      <div class="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <div class="eyebrow">关系图</div>
-          <h2 id="galaxy-heading" class="display mt-3 text-4xl md:text-5xl">从项目出发，沿着问题继续走。</h2>
-        </div>
-        <a class="focus-ring hidden text-sm font-semibold tracking-[.08em] md:inline" href="/projects">浏览全部项目 →</a>
+    <section class="site-shell home-section mx-auto" aria-labelledby="short-about">
+      <div class="grid gap-6 md:grid-cols-[1fr_2fr]">
+        <div class="eyebrow">关于</div>
+        <p id="short-about" class="short-about m-0">喜欢从一个具体的问题出发，把概念弄明白，把东西真正做出来，再把过程中值得留下的内容记录下来。</p>
       </div>
-      {projects.length || notes.length ? <GalaxyGraph nodes={galaxy.nodes} edges={galaxy.edges} /> : <EmptyState title="公开内容正在准备中" description="项目和笔记发布后，关系图会在这里出现。" />}
-      <p class="muted mt-4 text-sm leading-7">关系图是内容的渐进增强入口；每个项目、笔记和主题也都可以通过普通链接访问。</p>
     </section>
 
-    <section class="site-shell mx-auto mt-24" aria-labelledby="featured-projects">
-      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">Projects / 项目</div><h2 id="featured-projects" class="display mt-3 text-4xl md:text-5xl">精选项目</h2></div><a class="focus-ring text-sm font-semibold tracking-[.08em]" href="/projects">全部项目 →</a></div>
+    <section class="site-shell home-section mx-auto" aria-labelledby="featured-projects">
+      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">项目</div><h2 id="featured-projects" class="display mt-3 text-4xl md:text-5xl">精选项目</h2></div><a class="focus-ring text-sm" href="/projects">全部项目 →</a></div>
       {featuredProjects.length ? <div class="grid gap-5 md:grid-cols-3">{featuredProjects.map((project, index) => <ProjectCard project={project} index={index} />)}</div> : <EmptyState title="当前暂无公开项目" />}
     </section>
 
-    <section class="site-shell mx-auto mt-24 border-t border-[var(--line)] pt-8" aria-labelledby="latest-notes">
-      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">Notes / 笔记</div><h2 id="latest-notes" class="display mt-3 text-4xl md:text-5xl">最近笔记</h2></div><a class="focus-ring text-sm font-semibold tracking-[.08em]" href="/notes">全部笔记 →</a></div>
+    <section class="site-shell home-section mx-auto" aria-labelledby="latest-notes">
+      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">笔记</div><h2 id="latest-notes" class="display mt-3 text-4xl md:text-5xl">最近笔记</h2></div><a class="focus-ring text-sm" href="/notes">全部笔记 →</a></div>
       {latestNotes.length ? <div class="grid gap-0 md:grid-cols-2 md:gap-x-10">{latestNotes.map((note) => <NoteListItem note={note} />)}</div> : <EmptyState title="当前暂无公开笔记" />}
-    </section>
-
-    <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pb-24 pt-8 md:grid-cols-[1fr_2fr]">
-      <div class="eyebrow">编辑后的公开层</div>
-      <div>
-        <p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">原始知识库保持私密，公开页面只保留经过确认、能够被验证的内容。</p>
-        <a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.08em]" href="/about">了解公开边界 →</a>
-      </div>
     </section>
   </main>
 </BaseLayout>

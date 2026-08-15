@@ -63,7 +63,7 @@ export function readFrontmatter(source: string): { data: Record<string, unknown>
   if (!source.startsWith("---")) throw new Error("公开源文档必须包含 frontmatter");
   const match = source.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
   if (!match) throw new Error("frontmatter 格式无效");
-  const data = (parse(match[1]) ?? {}) as Record<string, unknown>;
+  const data = (parse(match[1].replace(/\r\n?/g, "\n")) ?? {}) as Record<string, unknown>;
   return { data, body: match[2] };
 }
 
