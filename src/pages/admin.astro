@@ -4,9 +4,8 @@ import { getCollection } from "astro:content";
 import profile from "../data/profile.json";
 
 const groups = [
-  { label: "项目", collection: "work", entries: await getCollection("work") },
+  { label: "项目", collection: "projects", entries: await getCollection("projects") },
   { label: "笔记", collection: "notes", entries: await getCollection("notes") },
-  { label: "写作", collection: "writing", entries: await getCollection("writing") },
 ];
 const repo = "https://github.com/TNHTH/TNHTH-blog";
 const commonLink = "focus-ring inline-flex min-h-11 items-center justify-center border px-4 py-2 text-xs font-bold tracking-wider";

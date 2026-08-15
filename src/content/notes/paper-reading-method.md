@@ -3,8 +3,8 @@ title: 技术论文阅读方法
 summary: 围绕问题、机制、证据与失败案例阅读，而不是收集一段段摘要。
 date: 2026-05-08
 tags: [研究, 阅读, 机器人学]
-type: note
-category: 研究方法
+source:
+  title: 技术论文阅读方法
 ---
 
 ## 先写清问题

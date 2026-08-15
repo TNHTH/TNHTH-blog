@@ -3,8 +3,7 @@ title: 差速驱动与阿克曼转向
 summary: 用一个实用框架连接车轮几何、非完整约束与控制器选择。
 date: 2026-02-10
 tags: [移动机器人, 运动学, 控制]
-type: note
-category: 机器人学
+relatedProjects: [leap-a20]
 ---
 
 ## 先说结论

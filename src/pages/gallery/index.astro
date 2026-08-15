@@ -1,5 +1,4 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
 ---
-<BaseLayout title="图库"><section class="site-shell mx-auto pt-16 md:pt-24"><SectionHeading eyebrow="04 / 图库" title="影像进行中" intro="一个用于照片与视觉实验的安静档案。只有经过授权、复核并清理元数据的媒体才会出现在这里。" /><div class="grid min-h-[360px] place-items-center border-y border-[var(--line)] py-20 text-center"><div><div class="display text-5xl">第一组影像正在复核。</div><p class="muted mx-auto mt-5 max-w-md text-sm leading-7">在授权和元数据检查完成前，不发布人像或定位信息。</p></div></div></section></BaseLayout>
+<LegacyRedirect source="/gallery" target="/notes" />

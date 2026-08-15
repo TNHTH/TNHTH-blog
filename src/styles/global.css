@@ -1,13 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f4f0e8;
-  --ink: #171817;
-  --muted: #676a62;
-  --line: #d8d1c4;
-  --signal: #b94630;
+  --paper: #f5f1e8;
+  --paper-soft: #ece6da;
+  --ink: #211f1a;
+  --muted: #5c5952;
+  --line: #d4cec1;
+  --signal: #a84b38;
   --display: "Bodoni 72", "Bodoni MT", "Iowan Old Style", Georgia, serif;
   --body: "Avenir Next", "Segoe UI", sans-serif;
+  --serif: "Source Han Serif VF", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+  font-size: 17px;
   font-family: var(--body);
   color: var(--ink);
   background: var(--paper);
@@ -27,6 +30,30 @@ a:hover { color: var(--signal); }
 .muted { color: var(--muted); }
 .accent { color: var(--signal); }
 .focus-ring:focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; }
+.tag { border: 1px solid var(--line); padding: .25rem .5rem; color: var(--muted); font-size: .75rem; }
+.project-card { min-height: 25rem; border: 1px solid var(--line); padding: 1.25rem; background: color-mix(in srgb, var(--paper) 84%, var(--paper-soft)); transition: border-color .3s ease, transform .3s ease, background-color .3s ease; }
+.project-card:hover { border-color: var(--signal); transform: translateY(-.25rem); background: var(--paper-soft); }
+.project-card-top { display: flex; align-items: center; justify-content: space-between; }
+.project-proof { display: flex; min-height: 8rem; align-items: end; border-bottom: 1px solid var(--line); padding-bottom: .75rem; color: var(--signal); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.note-list-item { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; border-top: 1px solid var(--line); padding: 1.5rem 0; }
+.note-list-item time { color: var(--signal); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.galaxy { min-height: 28rem; overflow: hidden; border: 1px solid var(--line); background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--signal) 12%, var(--paper)) 0, var(--paper) 52%); }
+.galaxy svg { display: block; width: 100%; height: auto; min-height: 28rem; }
+.galaxy-edge { stroke: var(--line); stroke-width: .22; opacity: .75; }
+.galaxy-node { --node-opacity: 1; cursor: pointer; fill: var(--ink); opacity: var(--node-opacity); transition: opacity .2s ease, fill .2s ease; }
+.galaxy-node:hover, .galaxy-node:focus-visible { fill: var(--signal); opacity: 1; }
+.galaxy-node circle { stroke: var(--paper); stroke-width: .5; }
+.galaxy-node text { font-family: var(--body); font-size: 2.2px; pointer-events: none; }
+.galaxy-node-project circle { fill: var(--signal); }
+.galaxy-node-topic circle { fill: var(--ink); }
+.galaxy-node-note circle { fill: var(--muted); }
+.galaxy-node-center circle { fill: var(--signal); }
+.prose { font-family: var(--serif); }
+.prose h2, .prose h3 { font-family: var(--display); font-weight: 400; letter-spacing: -.035em; }
+.prose pre { overflow-x: auto; border: 1px solid var(--line); background: var(--paper-soft); padding: 1rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .85rem; line-height: 1.6; }
+.prose code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
+.prose a { color: var(--signal); text-decoration: underline; text-underline-offset: .2em; }
+@media (max-width: 720px) { .note-list-item { grid-template-columns: 1fr; gap: .5rem; } .galaxy, .galaxy svg { min-height: 22rem; } }
 @media (max-width: 720px) { .site-shell { width: calc(100% - 32px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }

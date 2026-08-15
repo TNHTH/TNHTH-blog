@@ -3,8 +3,7 @@ title: 把过拟合看作泛化差距
 summary: 一份简洁的诊断指南，用来区分记忆训练集与真正有用的学习。
 date: 2026-02-11
 tags: [机器学习, 评估, 训练]
-type: note
-category: 机器学习
+relatedProjects: [dashgo-rl-navigation]
 ---
 
 过拟合不是简单的“模型太大”，而是训练集表现继续变好、未见数据表现停止变好甚至变差的情况。

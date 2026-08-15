@@ -1,0 +1,21 @@
+---
+interface Props { target: string; source: string; }
+const { target, source } = Astro.props;
+const canonical = new URL(target, Astro.site ?? Astro.url.origin).toString();
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex,follow" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <link rel="canonical" href={canonical} />
+    <title>页面已迁移 · TNHTH-blog</title>
+  </head>
+  <body>
+    <main>
+      <p>该页面已从 <code>{source}</code> 迁移。</p>
+      <p><a href={target}>继续访问新页面 →</a></p>
+    </main>
+  </body>
+</html>

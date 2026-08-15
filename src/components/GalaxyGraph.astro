@@ -1,0 +1,44 @@
+---
+import type { GalaxyEdge, GalaxyNode } from "../lib/content";
+interface Props { nodes: GalaxyNode[]; edges: GalaxyEdge[]; }
+const { nodes, edges } = Astro.props;
+---
+<div class="galaxy" data-galaxy>
+  <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
+    <title id="galaxy-title">内容关系图</title>
+    <desc id="galaxy-desc">项目、笔记和主题围绕个人主页形成的关系图。内容链接同时显示在普通页面中。</desc>
+    {edges.map((edge) => {
+      const source = nodes.find((node) => node.id === edge.source);
+      const target = nodes.find((node) => node.id === edge.target);
+      return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
+    })}
+    {nodes.map((node) => node.href ? (
+      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} href={node.href} aria-label={node.label} tabindex="0">
+        <circle cx={node.x} cy={node.y} r={node.kind === "project" ? 2.1 : node.kind === "topic" ? 1.5 : 1} />
+        <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
+      </a>
+    ) : (
+      <g class="galaxy-node galaxy-node-center" data-node-id={node.id} aria-hidden="true">
+        <circle cx={node.x} cy={node.y} r="2.8" />
+        <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
+      </g>
+    ))}
+  </svg>
+</div>
+<script>
+  const root = document.querySelector("[data-galaxy]");
+  const svg = root?.querySelector("svg");
+  const nodes = [...(root?.querySelectorAll("[data-node-id]") ?? [])];
+  svg?.addEventListener("pointermove", (event) => {
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    nodes.forEach((node) => {
+      const element = node as HTMLElement;
+      const circle = node.querySelector("circle");
+      const dx = Number(circle?.getAttribute("cx")) - x;
+      const dy = Number(circle?.getAttribute("cy")) - y;
+      element.style.setProperty("--node-opacity", String(Math.max(0.18, 1 - Math.hypot(dx, dy) / 28)));
+    });
+  });
+</script>

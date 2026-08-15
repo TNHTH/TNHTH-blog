@@ -6,6 +6,7 @@ const site = process.env.PUBLIC_SITE_URL || "https://tnhth-blog.honest-civet-722
 
 export default defineConfig({
   site,
+  output: "static",
   devToolbar: { enabled: false },
   integrations: [sitemap()],
   vite: { plugins: [tailwindcss()] },

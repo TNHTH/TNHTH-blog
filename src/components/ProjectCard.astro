@@ -1,0 +1,14 @@
+---
+import type { ProjectEntry } from "../lib/content";
+import { statusLabel } from "../../config/site";
+interface Props { project: ProjectEntry; index: number; }
+const { project, index } = Astro.props;
+const status = statusLabel[project.data.status];
+---
+<a class="project-card focus-ring group block" href={`/projects/${project.id}`}>
+  <div class="project-card-top"><span class="eyebrow">{String(index + 1).padStart(2, "0")}</span><span class="muted text-xs">{project.data.period}</span></div>
+  {project.data.evidence.length > 0 && <div class="project-proof" aria-hidden="true"><span>{project.data.evidence[0].label}</span></div>}
+  <h2 class="display mt-6 text-3xl transition-transform duration-300 group-hover:translate-x-1">{project.data.title}</h2>
+  <p class="muted mt-3 leading-7">{project.data.outcome}</p>
+  <div class="mt-5 flex flex-wrap gap-2 text-xs"><span class="accent">{status}</span>{project.data.topics.slice(0, 3).map((topic) => <span class="tag">{topic}</span>)}</div>
+</a>

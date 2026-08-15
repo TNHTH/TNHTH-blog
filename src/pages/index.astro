@@ -1,46 +1,67 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import ProjectRow from "../components/ProjectRow.astro";
-import { site } from "../../config/site";
+import EmptyState from "../components/EmptyState.astro";
+import GalaxyGraph from "../components/GalaxyGraph.astro";
+import NoteListItem from "../components/NoteListItem.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { assertContentRelationships, buildGalaxyModel, sortNotes, sortProjects } from "../lib/content";
 import { getCollection } from "astro:content";
+import { site } from "../../config/site";
 
-const projects = (await getCollection("work"))
-  .filter(({ data }) => data.featured)
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const projects = sortProjects(await getCollection("projects"));
+const notes = sortNotes(await getCollection("notes"));
+assertContentRelationships(projects, notes);
+const featuredProjects = projects.filter((project) => project.data.featured).slice(0, 3);
+const latestNotes = notes.slice(0, 4);
+const galaxy = buildGalaxyModel(projects, notes);
 ---
 
 <BaseLayout>
-  <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-28 md:pt-24">
-    <div>
-      <div class="eyebrow mb-6"><span data-profile="location">{site.location}</span> · <span data-profile="headline">{site.headline}</span></div>
-      <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl" data-profile="heroTitle">{site.heroTitle}</h1>
-      <p class="muted mt-8 max-w-xl text-base leading-8" data-profile="heroDescription">{site.heroDescription}</p>
-      <a class="focus-ring mt-10 inline-flex items-center gap-4 border-b-2 border-[var(--signal)] pb-2 text-sm font-semibold tracking-[.12em]" href="/work">查看精选项目 <span>→</span></a>
-    </div>
-    <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3">
-      <div class="eyebrow mb-4">当前方向</div>
-      <p class="m-0">机器人系统<br />强化学习<br />具身智能</p>
-    </div>
-  </section>
-  <section class="site-shell mx-auto" aria-labelledby="selected-work">
-    <div class="mb-2 flex items-end justify-between"><div class="eyebrow" id="selected-work">精选项目</div><span class="muted text-xs">2025—2026</span></div>
-    {projects.length ? projects.map((project, index) => (
-      <ProjectRow
-        index={`0${index + 1}`}
-        title={project.data.title}
-        summary={project.data.summary}
-        status={project.data.status}
-        tags={project.data.tags}
-        href={`/work/${project.id}`}
-        livePath={`src/content/work/${project.id}.md`}
-      />
-    )) : <div class="rule py-10 muted">公开项目正在复核准备中。</div>}
-  </section>
-  <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">持续更新的档案</div>
-    <div>
-      <p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">这个网站是经过编辑的公开层，原始知识库始终保持私密。</p>
-      <a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.12em]" href="/about">了解公开边界 →</a>
-    </div>
-  </section>
+  <main>
+    <section class="site-shell mx-auto grid gap-12 pb-16 pt-14 md:grid-cols-[1fr_280px] md:pb-24 md:pt-24">
+      <div>
+        <div class="eyebrow mb-6">{site.location} · {site.headline}</div>
+        <h1 class="display max-w-4xl text-6xl leading-[.92] md:text-8xl">{site.heroTitle}</h1>
+        <p class="muted mt-8 max-w-xl text-base leading-8">{site.heroDescription}</p>
+        <div class="mt-10 flex flex-wrap gap-6 text-sm font-semibold tracking-[.08em]">
+          <a class="focus-ring border-b-2 border-[var(--signal)] pb-2" href="/projects">查看项目 <span aria-hidden="true">→</span></a>
+          <a class="focus-ring border-b border-[var(--line)] pb-2" href="/about">关于我 <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <div class="self-end border-l border-[var(--line)] pl-6 text-sm leading-7 md:mb-3">
+        <div class="eyebrow mb-4">公开层</div>
+        <p class="m-0">项目、笔记<br />以及它们之间的关系。</p>
+      </div>
+    </section>
+
+    <section class="site-shell mx-auto border-t border-[var(--line)] pt-8" aria-labelledby="galaxy-heading">
+      <div class="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <div class="eyebrow">关系图</div>
+          <h2 id="galaxy-heading" class="display mt-3 text-4xl md:text-5xl">从项目出发，沿着问题继续走。</h2>
+        </div>
+        <a class="focus-ring hidden text-sm font-semibold tracking-[.08em] md:inline" href="/projects">浏览全部项目 →</a>
+      </div>
+      {projects.length || notes.length ? <GalaxyGraph nodes={galaxy.nodes} edges={galaxy.edges} /> : <EmptyState title="公开内容正在准备中" description="项目和笔记发布后，关系图会在这里出现。" />}
+      <p class="muted mt-4 text-sm leading-7">关系图是内容的渐进增强入口；每个项目、笔记和主题也都可以通过普通链接访问。</p>
+    </section>
+
+    <section class="site-shell mx-auto mt-24" aria-labelledby="featured-projects">
+      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">Projects / 项目</div><h2 id="featured-projects" class="display mt-3 text-4xl md:text-5xl">精选项目</h2></div><a class="focus-ring text-sm font-semibold tracking-[.08em]" href="/projects">全部项目 →</a></div>
+      {featuredProjects.length ? <div class="grid gap-5 md:grid-cols-3">{featuredProjects.map((project, index) => <ProjectCard project={project} index={index} />)}</div> : <EmptyState title="当前暂无公开项目" />}
+    </section>
+
+    <section class="site-shell mx-auto mt-24 border-t border-[var(--line)] pt-8" aria-labelledby="latest-notes">
+      <div class="mb-6 flex items-end justify-between gap-4"><div><div class="eyebrow">Notes / 笔记</div><h2 id="latest-notes" class="display mt-3 text-4xl md:text-5xl">最近笔记</h2></div><a class="focus-ring text-sm font-semibold tracking-[.08em]" href="/notes">全部笔记 →</a></div>
+      {latestNotes.length ? <div class="grid gap-0 md:grid-cols-2 md:gap-x-10">{latestNotes.map((note) => <NoteListItem note={note} />)}</div> : <EmptyState title="当前暂无公开笔记" />}
+    </section>
+
+    <section class="site-shell mx-auto mt-24 grid gap-8 border-t border-[var(--line)] pb-24 pt-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">编辑后的公开层</div>
+      <div>
+        <p class="display m-0 max-w-3xl text-4xl leading-tight md:text-5xl">原始知识库保持私密，公开页面只保留经过确认、能够被验证的内容。</p>
+        <a class="focus-ring mt-7 inline-block text-sm font-semibold tracking-[.08em]" href="/about">了解公开边界 →</a>
+      </div>
+    </section>
+  </main>
 </BaseLayout>

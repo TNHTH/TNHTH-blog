@@ -1,15 +1,90 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import ContentList from "../../components/ContentList.astro";
+import NoteListItem from "../../components/NoteListItem.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import { getCollection } from "astro:content";
+import { sortNotes } from "../../lib/content";
 
-const entries = await getCollection("notes");
+const entries = sortNotes(await getCollection("notes"));
+const topics = [...new Set(entries.flatMap((entry) => entry.data.tags))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+const query = Astro.url.searchParams.get("q") ?? "";
+const selectedTopic = Astro.url.searchParams.get("topic") ?? "";
 ---
 
-<BaseLayout title="笔记">
+<BaseLayout title="笔记" description="郭伟浩公开的技术理解、实验记录、阅读与思考。">
   <section class="site-shell mx-auto pt-16 md:pt-24">
-    <SectionHeading eyebrow="02 / 笔记" title="工作知识" intro="经过第二次审视后公开的概念、公式与系统模式。" />
-    <ContentList base="/notes" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} />
+    <SectionHeading eyebrow="02 / 笔记" title="统一内容池" intro="正文优先。来源、项目、系列和摄影信息只在确实存在时出现。" />
+    <form id="note-search-form" class="mb-8 flex flex-col gap-3 border-y border-[var(--line)] py-5 md:flex-row" role="search" action="/notes" method="get">
+      <label class="sr-only" for="note-search">搜索笔记</label>
+      <input id="note-search" name="q" value={query} class="focus-ring min-h-11 flex-1 border border-[var(--line)] bg-transparent px-3" type="search" placeholder="搜索标题、摘要或主题" autocomplete="off" />
+      <label class="sr-only" for="note-topic">按主题筛选</label>
+      <select id="note-topic" name="topic" class="focus-ring min-h-11 border border-[var(--line)] bg-transparent px-3">
+        <option value="">所有主题</option>
+        {topics.map((topic) => <option value={topic} selected={topic === selectedTopic}>{topic}</option>)}
+      </select>
+      <span class="muted self-center text-sm" id="note-count">{entries.length} 篇公开笔记</span>
+    </form>
+    <div id="pagefind-search" class="mb-8" aria-live="polite"></div>
+    <div id="note-results">{entries.length ? entries.map((note) => <NoteListItem note={note} />) : <EmptyState title="当前暂无公开笔记" description="笔记正在经过公开复核。" />}</div>
   </section>
 </BaseLayout>
+<script>
+  const form = document.querySelector("#note-search-form");
+  const input = document.querySelector("#note-search") as HTMLInputElement | null;
+  const topic = document.querySelector("#note-topic") as HTMLSelectElement | null;
+  const items = [...document.querySelectorAll("[data-search-item]")];
+  const count = document.querySelector("#note-count");
+  if (!input) throw new Error("note search input missing");
+  const initialParams = new URLSearchParams(location.search);
+  input.value = initialParams.get("q") ?? input.value;
+  if (topic) topic.value = initialParams.get("topic") ?? topic.value;
+  const applyFilter = () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    const selectedTopic = topic?.value ?? "";
+    let visible = 0;
+    items.forEach((item) => {
+      const tags = (item.getAttribute("data-search-tags") ?? "").split(",");
+      const match = (!query || (item.getAttribute("data-search-text") ?? "").toLocaleLowerCase().includes(query)) && (!selectedTopic || tags.includes(selectedTopic));
+      item.toggleAttribute("hidden", !match);
+      if (match) visible += 1;
+    });
+    if (count) count.textContent = query && visible === 0 ? "没有找到匹配内容" : `${visible} 篇公开笔记`;
+    const params = new URLSearchParams();
+    if (input.value.trim()) params.set("q", input.value.trim());
+    if (selectedTopic) params.set("topic", selectedTopic);
+    history.replaceState(null, "", `${location.pathname}${params.toString() ? `?${params}` : ""}`);
+  };
+  input?.addEventListener("input", applyFilter);
+  topic?.addEventListener("change", applyFilter);
+  form?.addEventListener("submit", (event) => { event.preventDefault(); applyFilter(); });
+  applyFilter();
+</script>
+<script is:inline>
+  const pagefindRoot = document.querySelector("#pagefind-search");
+  const searchQuery = new URLSearchParams(location.search).get("q");
+  if (pagefindRoot && searchQuery) {
+    import("/pagefind/pagefind.js").then(async (pagefind) => {
+      const result = await pagefind.search(searchQuery);
+      const items = await Promise.all(result.results.slice(0, 8).map((item) => item.data()));
+      pagefindRoot.innerHTML = "";
+      if (!items.length) { pagefindRoot.textContent = "没有找到匹配内容"; return; }
+      const heading = document.createElement("p");
+      heading.className = "eyebrow";
+      heading.textContent = "全文搜索";
+      pagefindRoot.append(heading);
+      for (const item of items) {
+        const link = document.createElement("a");
+        link.className = "focus-ring block border-b border-[var(--line)] py-4";
+        link.href = item.url;
+        const title = document.createElement("strong");
+        title.textContent = item.meta?.title ?? item.url;
+        const excerpt = document.createElement("span");
+        excerpt.className = "muted ml-3";
+        excerpt.textContent = (item.excerpt ?? "").replace(/<[^>]+>/g, "");
+        link.append(title, excerpt);
+        pagefindRoot.append(link);
+      }
+    }).catch(() => {});
+  }
+</script>

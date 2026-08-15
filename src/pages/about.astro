@@ -6,7 +6,7 @@ import { site } from "../../config/site";
 <BaseLayout title={`关于 ${site.name}`}>
   <section class="site-shell mx-auto grid gap-12 pt-16 md:grid-cols-[1fr_280px] md:pt-24">
     <div>
-      <div class="eyebrow">05 / 关于</div>
+      <div class="eyebrow">ABOUT / 关于</div>
       <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl"><span data-profile="name">{site.name}</span>，工作与世界之间的编辑层。</h1>
     </div>
     <div class="self-end text-sm leading-7">
@@ -16,10 +16,22 @@ import { site } from "../../config/site";
     </div>
   </section>
   <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">公开边界</div>
+    <div class="eyebrow">关于我</div>
     <div class="max-w-3xl text-base leading-8">
-      <p>这个网站是经过筛选的公开层，不是私人知识库的镜像。每一页内容都会在发布前经过人工复核、内容校验与敏感信息扫描，并复制到独立公开仓库。</p>
-      <p class="muted">个人笔记的真值源留在本地。公开站点只收录能够脱离私人路径、人物信息、凭据和未经验证结论而独立成立的内容。</p>
+      <p>我在杭州学习和实践机器人系统、强化学习与工程软件。这里记录已经能够独立成立的公开项目、笔记和判断。</p>
+      <p class="muted">个人笔记的真值源留在本地。公开站点只收录经过人工复核、内容校验与敏感信息扫描的内容。</p>
     </div>
+  </section>
+  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">经历</div><div class="max-w-3xl leading-8"><p>从机器人系统集成、嵌入式控制到强化学习实验，持续关注不同模块之间的接口、证据和真实边界。</p></div>
+  </section>
+  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">技术与实践</div><div class="flex max-w-3xl flex-wrap gap-2">{site.headline.split(" · ").map((item) => <span class="border border-[var(--line)] px-3 py-2">{item}</span>)}<span class="border border-[var(--line)] px-3 py-2">系统集成</span><span class="border border-[var(--line)] px-3 py-2">公开内容工程</span></div>
+  </section>
+  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">其他兴趣</div><div class="max-w-3xl leading-8"><p>阅读、摄影、写作与对日常系统的观察，会以笔记的形式自然出现在同一个内容池中。</p></div>
+  </section>
+  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
+    <div class="eyebrow">链接</div><div><a class="focus-ring underline" href={site.github} target="_blank" rel="noreferrer">GitHub →</a></div>
   </section>
 </BaseLayout>

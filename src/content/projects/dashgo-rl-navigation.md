@@ -1,18 +1,26 @@
 ---
 title: DashGo 强化学习导航
 summary: 一个 Isaac Lab 导航实验，将激光雷达观测、循环策略与真实机器人验证闭环连接起来。
-date: 2026-06-02
-tags: [Isaac Lab, 强化学习, LiDAR, ROS2]
-type: project
-status: ongoing
+outcome: 完成从仿真训练、观测数据管线到导航运行时的闭环，目前继续进行真实机器人验证。
+status: active
+period: "2026"
+topics: [Isaac Lab, 强化学习, LiDAR, ROS2]
+featured: true
+priority: 30
 role: 强化学习系统集成与评估
-contribution:
+contributions:
   - 调整训练环境与观测数据管线。
   - 将策略输出接入导航运行时。
   - 补充评估记录，保留较低成功率等限制信息。
-evidence: [EV-DG-RL-COMMIT-001, EV-DG-RL-TEST-001]
+tech: [Isaac Lab, ROS 2, Python, 强化学习]
 repo: https://github.com/TNHTH/dashgo-rl-navigation
-featured: true
+evidence:
+  - kind: document
+    label: 评估记录
+    value: EV-DG-RL-TEST-001
+  - kind: document
+    label: 系统集成记录
+    value: EV-DG-RL-COMMIT-001
 ---
 
 ## 为什么做它

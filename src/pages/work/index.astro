@@ -1,25 +1,4 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
-import ProjectRow from "../../components/ProjectRow.astro";
-import { getCollection } from "astro:content";
-
-const projects = (await getCollection("work")).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
 ---
-
-<BaseLayout title="项目">
-  <section class="site-shell mx-auto pt-16 md:pt-24">
-    <SectionHeading eyebrow="01 / 项目" title="精选系统" intro="每个项目都标明证据、个人贡献边界和当前限制，而不只展示经过包装的结果。" />
-    {projects.length ? projects.map((project, index) => (
-      <ProjectRow
-        index={String(index + 1).padStart(2, "0")}
-        title={project.data.title}
-        summary={project.data.summary}
-        status={project.data.status}
-        tags={project.data.tags}
-        href={`/work/${project.id}`}
-        livePath={`src/content/work/${project.id}.md`}
-      />
-    )) : <div class="rule py-10 muted">还没有通过公开复核的项目。</div>}
-  </section>
-</BaseLayout>
+<LegacyRedirect source="/work" target="/projects" />
