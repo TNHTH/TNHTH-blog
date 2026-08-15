@@ -11,7 +11,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 ---
 
 <div class="galaxy" data-galaxy data-graph-mode="quiet">
-  <button class="galaxy-exit focus-ring" data-galaxy-exit type="button">返回介绍</button>
   <div class="sr-only" data-graph-status aria-live="polite">关系图处于安静模式</div>
   <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
     <title id="galaxy-title">内容关系图</title>
@@ -33,6 +32,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         </g>
       ) : (
         <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} aria-hidden="true" transform={`translate(${node.x} ${node.y})`}>
+          {node.kind === "center" ? <><circle class="galaxy-center-ring" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /><circle class="galaxy-center-ring galaxy-center-ring-delayed" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /></> : null}
           <circle cx="0" cy="0" r={nodeRadius(node.kind)} />
           <text x={nodeRadius(node.kind) + 2} y="-1">{node.label}</text>
         </g>
@@ -52,10 +52,10 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
   const svg = root?.querySelector<SVGSVGElement>("svg");
   const stage = root?.querySelector<SVGGElement>("[data-galaxy-stage]");
   const rippleLayer = root?.querySelector<SVGGElement>("[data-galaxy-ripples]");
-  const exitButton = root?.querySelector<HTMLButtonElement>("[data-galaxy-exit]");
   const status = root?.querySelector<HTMLElement>("[data-graph-status]");
   const nodeElements = [...(root?.querySelectorAll<SVGGElement>(".galaxy-node[data-node-id]") ?? [])];
   const edgeElements = [...(root?.querySelectorAll<SVGLineElement>(".galaxy-edge") ?? [])];
+  const elementById = new Map(nodeElements.map((element) => [element.dataset.nodeId ?? "", element]));
 
   if (root && svg && stage && rippleLayer) {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -74,14 +74,17 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     let drag: { kind: "node" | "pan"; id?: string; pointerId: number; lastX: number; lastY: number; moved: boolean } | null = null;
     let suppressClick = false;
     let restoreTimer: number | undefined;
+    let restoreRaf: number | undefined;
+    let panRaf: number | undefined;
+    let pendingPan: { dx: number; dy: number } | null = null;
 
     const simulation = forceSimulation<GalaxySimulationNode>(initialNodes)
       .force("link", forceLink<GalaxySimulationNode, GalaxySimulationLink>(links).id((node) => node.id).distance((link) => typeof link.source === "string" || typeof link.source === "number" ? 13 : link.source.kind === "center" ? 19 : 13).strength(.5))
       .force("charge", forceManyBody().strength(-17))
       .force("collide", forceCollide().radius((node: any) => node.kind === "project" ? 5 : node.kind === "center" ? 4 : 3.1).strength(.9))
       .force("center", forceCenter(50, 50).strength(.16))
-      .alphaDecay(.018)
-      .alphaTarget(reducedMotion ? 0 : .018);
+      .alphaDecay(.035)
+      .alphaTarget(0);
 
     const setView = () => stage.setAttribute("transform", `translate(${view.x} ${view.y}) scale(${view.k})`);
     const setStatus = (message: string) => { if (status) status.textContent = message; };
@@ -95,7 +98,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     };
     const render = () => {
       initialNodes.forEach((node) => {
-        const element = nodeElements.find((candidate) => candidate.dataset.nodeId === node.id);
+        const element = elementById.get(node.id);
         if (!element) return;
         element.setAttribute("transform", `translate(${node.x} ${node.y})`);
         element.dataset.nodeX = String(node.x);
@@ -134,10 +137,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         element.classList.toggle("is-muted", Boolean(id && !isNear));
       });
     };
-    const nearestNode = (point: { x: number; y: number }) => initialNodes.reduce<{ node: any; distance: number } | null>((nearest, node) => {
-      const distance = Math.hypot(node.x - point.x, node.y - point.y);
-      return !nearest || distance < nearest.distance ? { node, distance } : nearest;
-    }, null);
     const ripple = (point: { x: number; y: number }) => {
       if (reducedMotion) return;
       for (let index = 0; index < 4; index += 1) {
@@ -158,29 +157,66 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         requestAnimationFrame(animate);
       }
     };
-    const enterExplore = () => {
+    const cancelRestore = () => {
       window.clearTimeout(restoreTimer);
+      if (restoreRaf !== undefined) window.cancelAnimationFrame(restoreRaf);
+      restoreRaf = undefined;
+    };
+    const enterExplore = () => {
+      cancelRestore();
       hero?.classList.add("is-exploring");
       root.dataset.graphMode = "explore";
-      setStatus("关系图处于探索模式。拖动节点、空白区域或滚轮缩放。按返回介绍恢复。");
+      setStatus("关系图处于探索模式。拖动节点或空白区域，滚轮可以缩放。松手后自动恢复。");
+    };
+    const restoreView = () => {
+      const from = { ...view };
+      const startedAt = performance.now();
+      const animate = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / 360);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        view.x = from.x * (1 - eased);
+        view.y = from.y * (1 - eased);
+        view.k = from.k + (1 - from.k) * eased;
+        setView();
+        if (progress < 1) {
+          restoreRaf = window.requestAnimationFrame(animate);
+          return;
+        }
+        restoreRaf = undefined;
+        view.x = 0; view.y = 0; view.k = 1;
+        setView();
+        hero?.classList.remove("is-exploring");
+        root.dataset.graphMode = "quiet";
+        setStatus("关系图处于安静模式");
+      };
+      restoreRaf = window.requestAnimationFrame(animate);
     };
     const scheduleRestore = () => {
       window.clearTimeout(restoreTimer);
       restoreTimer = window.setTimeout(() => {
-        if (!drag) {
-          hero?.classList.remove("is-exploring");
-          root.dataset.graphMode = "quiet";
-          setStatus("关系图处于安静模式");
-        }
-      }, 2800);
+        if (!drag) restoreView();
+      }, 650);
     };
     const resetView = () => {
+      cancelRestore();
       view.x = 0; view.y = 0; view.k = 1;
       setView();
       hero?.classList.remove("is-exploring");
       root.dataset.graphMode = "quiet";
       setStatus("关系图处于安静模式");
-      window.clearTimeout(restoreTimer);
+    };
+    const flushPan = () => {
+      panRaf = undefined;
+      if (!pendingPan) return;
+      const rect = svg.getBoundingClientRect();
+      view.x += (pendingPan.dx / rect.width) * 100;
+      view.y += (pendingPan.dy / rect.height) * 100;
+      pendingPan = null;
+      setView();
+    };
+    const queuePan = (dx: number, dy: number) => {
+      pendingPan = pendingPan ? { dx: pendingPan.dx + dx, dy: pendingPan.dy + dy } : { dx, dy };
+      if (panRaf === undefined) panRaf = window.requestAnimationFrame(flushPan);
     };
 
     simulation.on("tick", render);
@@ -189,18 +225,17 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 
     svg.addEventListener("pointerdown", (event) => {
       const pointer = event as PointerEvent;
-      const target = (pointer.target as Element | null)?.closest<SVGAElement>("[data-node-id]");
-      const point = graphPoint(pointer);
+      const target = (pointer.target as Element | null)?.closest<SVGGElement>(".galaxy-node[data-node-id]");
       if (target) {
         const node = byId.get(target.dataset.nodeId ?? "");
         if (!node) return;
         drag = { kind: "node", id: node.id, pointerId: pointer.pointerId, lastX: pointer.clientX, lastY: pointer.clientY, moved: false };
         node.fx = node.x; node.fy = node.y;
-        simulation.alphaTarget(.25).restart();
+        simulation.alphaTarget(.32).restart();
         ripple({ x: node.x, y: node.y });
       } else {
         drag = { kind: "pan", pointerId: pointer.pointerId, lastX: pointer.clientX, lastY: pointer.clientY, moved: false };
-        ripple(point);
+        pendingPan = null;
       }
       enterExplore();
       svg.setPointerCapture(pointer.pointerId);
@@ -218,25 +253,23 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
             node.fx = point.x; node.fy = point.y;
           }
         } else {
-          const rect = svg.getBoundingClientRect();
-          view.x += (dx / rect.width) * 100;
-          view.y += (dy / rect.height) * 100;
-          setView();
+          queuePan(dx, dy);
         }
         drag.lastX = pointer.clientX; drag.lastY = pointer.clientY;
-        return;
       }
-      const nearest = nearestNode(graphPoint(pointer));
-      setFocus(nearest && nearest.distance < 10 ? nearest.node.id : null);
     });
     const finishPointer = (event: Event) => {
       if (!drag) return;
       const completed = drag;
       drag = null;
+      if (completed.kind === "pan") {
+        if (panRaf !== undefined) window.cancelAnimationFrame(panRaf);
+        flushPan();
+      }
       if (completed.kind === "node" && completed.id) {
         const node = byId.get(completed.id);
         if (node) { node.fx = null; node.fy = null; ripple({ x: node.x, y: node.y }); }
-        simulation.alphaTarget(reducedMotion ? 0 : .018);
+        simulation.alphaTarget(0);
       }
       if (completed.moved) suppressClick = true;
       window.setTimeout(() => { suppressClick = false; }, 80);
@@ -258,6 +291,9 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       enterExplore();
       scheduleRestore();
     }, { passive: false });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && root.dataset.graphMode === "explore") resetView();
+    });
     nodeElements.forEach((element) => {
       const link = element.querySelector<HTMLAnchorElement>("a");
       element.addEventListener("pointerenter", () => setFocus(element.dataset.nodeId ?? null));
@@ -265,12 +301,14 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       link?.addEventListener("blur", () => setFocus(null));
       link?.addEventListener("click", (event) => {
         if (suppressClick) { event.preventDefault(); return; }
+        event.preventDefault();
         const id = element.dataset.nodeId ?? null;
         setFocus(id);
         const node = byId.get(id ?? "");
         if (node) ripple({ x: node.x, y: node.y });
+        const href = link.href;
+        window.setTimeout(() => window.location.assign(href), reducedMotion ? 0 : 180);
       });
     });
-    exitButton?.addEventListener("click", resetView);
   }
 </script>

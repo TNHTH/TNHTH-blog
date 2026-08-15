@@ -19,14 +19,14 @@ const galaxy = buildGalaxyModel(projects, notes);
 <BaseLayout>
   <main>
     <section class="site-shell home-hero mx-auto">
+      <div class="home-hero-galaxy" aria-label="项目、笔记和主题的关系图">
+        {projects.length || notes.length ? <GalaxyGraph nodes={galaxy.nodes} edges={galaxy.edges} /> : <EmptyState title="当前暂无公开内容" description="项目和笔记发布后，关系图会在这里出现。" />}
+      </div>
       <div class="home-hero-copy">
         <div class="eyebrow mb-5">{site.location}</div>
         <h1 class="display home-hero-name m-0">{site.heroTitle}</h1>
         <p class="home-hero-description mt-7">{site.heroDescription}</p>
         <p class="home-hero-meta mt-7 m-0">{site.practice?.join(" / ")}</p>
-      </div>
-      <div class="home-hero-galaxy" aria-label="项目、笔记和主题的关系图">
-        {projects.length || notes.length ? <GalaxyGraph nodes={galaxy.nodes} edges={galaxy.edges} /> : <EmptyState title="当前暂无公开内容" description="项目和笔记发布后，关系图会在这里出现。" />}
       </div>
     </section>
 
