@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+import { statusLabel } from "../../../config/site";
+import { relatedNotesForProject } from "../../lib/content";
+
+export async function getStaticPaths() {
+  return (await getCollection("projects")).map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const notes = await getCollection("notes");
+const relatedNotes = relatedNotesForProject(entry.id, notes);
+const status = statusLabel[entry.data.status];
+---
+<BaseLayout title={entry.data.title} description={entry.data.outcome}>
+  <article class="site-shell mx-auto pt-16 md:pt-24">
+    <div class="eyebrow">Project / {status}</div>
+    <div class="mt-5 grid gap-10 md:grid-cols-[1fr_280px] md:items-end">
+      <div><h1 class="display m-0 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1><p class="muted mt-7 max-w-2xl text-xl leading-9">{entry.data.outcome}</p></div>
+      <div class="text-sm leading-7"><div>{entry.data.period}</div>{entry.data.role && <div class="muted">{entry.data.role}</div>}{entry.data.repo && <a class="focus-ring mt-4 inline-block underline" href={entry.data.repo} target="_blank" rel="noreferrer">打开 GitHub →</a>}</div>
+    </div>
+
+    <section class="mt-14 border-y border-[var(--line)] py-8" aria-labelledby="evidence-title">
+      <div class="eyebrow" id="evidence-title">Primary Evidence</div>
+      {entry.data.evidence.length ? <div class="mt-5 grid gap-4 md:grid-cols-2">{entry.data.evidence.map((item) => <div class="border border-[var(--line)] p-5"><strong>{item.label}</strong>{item.value && <p class="muted mt-2 font-mono text-sm">{item.value}</p>}</div>)}</div> : <p class="muted mt-4">当前没有独立媒体证据，页面采用文本优先布局。</p>}
+    </section>
+
+    {entry.data.contributions.length > 0 && <section class="mt-14 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="contributions-title"><div class="eyebrow" id="contributions-title">我的贡献</div><ul class="m-0 grid gap-3 pl-5 leading-8">{entry.data.contributions.map((item) => <li>{item}</li>)}</ul></section>}
+    {entry.data.tech.length > 0 && <section class="mt-12 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="tech-title"><div class="eyebrow" id="tech-title">技术概览</div><div class="flex flex-wrap gap-2">{entry.data.tech.map((item) => <span class="border border-[var(--line)] px-3 py-2 text-sm">{item}</span>)}</div></section>}
+    <div class="prose mt-14 max-w-3xl leading-8"><Content /></div>
+    {relatedNotes.length > 0 && <section class="mt-16 border-t border-[var(--line)] pt-7" aria-labelledby="related-notes-title"><div class="eyebrow" id="related-notes-title">关联笔记</div><div class="mt-5 grid gap-3">{relatedNotes.map((note) => <a class="focus-ring border-b border-[var(--line)] py-4" href={`/notes/${note.id}`}><strong>{note.data.title}</strong>{note.data.summary && <span class="muted ml-3">{note.data.summary}</span>}</a>)}</div></section>}
+  </article>
+</BaseLayout>

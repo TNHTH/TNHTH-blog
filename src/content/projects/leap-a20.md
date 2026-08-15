@@ -1,18 +1,26 @@
 ---
 title: Leap / A20 消防巡检机器人
-summary: 一个用于自主巡检、火情检测与整车控制实验的 ROS2 和嵌入式平台。
-date: 2026-06-02
-tags: [ROS2, 嵌入式, 巡检机器人, 导航]
-type: project
-status: partial
+summary: 一个用于自主巡检、火情检测与整车控制实验的 ROS 2 和嵌入式平台。
+outcome: 完成嵌入式控制、ROS 2 通信、车辆状态与巡检行为之间的系统集成和接口文档。
+status: prototype
+period: "2026"
+topics: [ROS 2, 嵌入式, 巡检机器人, 导航]
+featured: true
+priority: 10
 role: 机器人软件集成与系统文档
-contribution:
-  - 连接固件、ROS2 节点和车辆控制接口。
+contributions:
+  - 连接固件、ROS 2 节点和车辆控制接口。
   - 围绕可观测系统状态组织巡检流程。
   - 记录平台能力与已演示行为之间的边界。
-evidence: [EV-LEAP-COMMIT-001, EV-LEAP-DOC-001]
+tech: [ROS 2, 嵌入式, 车辆控制, 导航]
 repo: https://github.com/TNHTH/leap
-featured: true
+evidence:
+  - kind: document
+    label: 集成记录
+    value: EV-LEAP-COMMIT-001
+  - kind: document
+    label: 平台文档
+    value: EV-LEAP-DOC-001
 ---
 
 ## 概览

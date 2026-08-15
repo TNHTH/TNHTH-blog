@@ -1,15 +1,37 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import ContentList from "../../components/ContentList.astro";
+import NoteListItem from "../../components/NoteListItem.astro";
+import EmptyState from "../../components/EmptyState.astro";
 import { getCollection } from "astro:content";
+import { sortNotes } from "../../lib/content";
 
-const entries = await getCollection("notes");
+const entries = sortNotes(await getCollection("notes"));
 ---
 
-<BaseLayout title="笔记">
+<BaseLayout title="笔记" description="郭伟浩公开的技术理解、实验记录、阅读与思考。">
   <section class="site-shell mx-auto pt-16 md:pt-24">
-    <SectionHeading eyebrow="02 / 笔记" title="工作知识" intro="经过第二次审视后公开的概念、公式与系统模式。" />
-    <ContentList base="/notes" items={entries.map(({ id, data }) => ({ slug: id, ...data }))} />
+    <SectionHeading eyebrow="02 / 笔记" title="统一内容池" intro="正文优先。来源、项目、系列和摄影信息只在确实存在时出现。" />
+    <form class="mb-8 flex flex-col gap-3 border-y border-[var(--line)] py-5 md:flex-row" role="search" onsubmit="return false">
+      <label class="sr-only" for="note-search">搜索笔记</label>
+      <input id="note-search" class="focus-ring min-h-11 flex-1 border border-[var(--line)] bg-transparent px-3" type="search" placeholder="搜索标题、摘要或主题" autocomplete="off" />
+      <span class="muted self-center text-sm" id="note-count">{entries.length} 篇公开笔记</span>
+    </form>
+    <div id="note-results">{entries.length ? entries.map((note) => <NoteListItem note={note} />) : <EmptyState title="当前暂无公开笔记" description="笔记正在经过公开复核。" />}</div>
   </section>
 </BaseLayout>
+<script>
+  const input = document.querySelector("#note-search") as HTMLInputElement | null;
+  const items = [...document.querySelectorAll("[data-search-item]")];
+  const count = document.querySelector("#note-count");
+  input?.addEventListener("input", () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    let visible = 0;
+    items.forEach((item) => {
+      const match = !query || (item.getAttribute("data-search-text") ?? "").toLocaleLowerCase().includes(query);
+      item.toggleAttribute("hidden", !match);
+      if (match) visible += 1;
+    });
+    if (count) count.textContent = query && visible === 0 ? "没有找到匹配内容" : `${visible} 篇公开笔记`;
+  });
+</script>

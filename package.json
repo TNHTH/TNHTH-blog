@@ -10,7 +10,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build:astro": "astro build",
+    "search:index": "pagefind --site dist",
+    "build": "pnpm build:astro && pnpm search:index",
     "start": "node dist/server/index.js",
     "preview": "astro preview",
     "check": "astro check",
@@ -20,9 +22,11 @@
     "audit:public": "tsx scripts/validate-public.ts --snapshot",
     "sync:github": "tsx scripts/sync-github.ts",
     "hooks:install": "node scripts/install-git-hooks.mjs",
-    "ci": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test && pnpm build",
-    "postbuild": "node scripts/prepare-sites-runtime.mjs",
-    "prebuild": "npm run content:verify && npm run audit:public"
+    "verify": "pnpm content:verify && pnpm audit:public && pnpm check && pnpm test",
+    "test:e2e": "playwright test",
+    "ci": "pnpm verify && pnpm build && pnpm test:e2e",
+    "build:sites": "pnpm build && node scripts/prepare-sites-runtime.mjs",
+    "serve:dist": "node scripts/serve-dist.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
@@ -35,6 +39,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "@tailwindcss/vite": "^4.1.0",
+    "@playwright/test": "^1.55.0",
+    "pagefind": "^1.5.2",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"

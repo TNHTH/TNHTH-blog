@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import NoteListItem from "../../components/NoteListItem.astro";
+import EmptyState from "../../components/EmptyState.astro";
+import { getCollection } from "astro:content";
+import { topicIndex } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  const notes = await getCollection("notes");
+  return [...topicIndex(projects, notes)].map(([slug, topic]) => ({ params: { slug }, props: { topic } }));
+}
+
+const { topic } = Astro.props;
+---
+<BaseLayout title={`主题：${topic.name}`} description={`与${topic.name}相关的项目和笔记。`}>
+  <section class="site-shell mx-auto pt-16 md:pt-24">
+    <SectionHeading eyebrow="TOPIC" title={topic.name} intro="主题是内容聚合层，不是新的一级内容类型。" />
+    {topic.projects.length > 0 && <div class="grid gap-x-10 md:grid-cols-2">{topic.projects.map((project, index) => <ProjectCard project={project} index={index} />)}</div>}
+    {topic.notes.length > 0 && <div class="mt-16"><div class="eyebrow mb-4">相关笔记</div>{topic.notes.map((note) => <NoteListItem note={note} />)}</div>}
+    {topic.projects.length === 0 && topic.notes.length === 0 && <EmptyState title="该主题暂无公开内容" />}
+  </section>
+</BaseLayout>

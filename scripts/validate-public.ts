@@ -45,8 +45,11 @@ async function validateSnapshot(): Promise<number> {
     if (relative.startsWith("src/content/") && ext === ".md") {
       const { data, body } = readFrontmatter(text);
       if (data.publish !== undefined || data.visibility !== undefined) throw new Error(`${relative}: 公开快照不得保留内部发布标记`);
-      if (!data.title || !data.summary || !data.date || !data.type) throw new Error(`${relative}: 公开快照 frontmatter 不完整`);
-      if (data.type === "project" && (!data.role || !data.contribution || !data.status)) throw new Error(`${relative}: Work 快照缺少贡献边界或状态`);
+      if (relative.startsWith("src/content/projects/")) {
+        if (!data.title || !data.summary || !data.outcome || !data.status || !data.period) throw new Error(`${relative}: Project frontmatter 不完整`);
+      } else if (relative.startsWith("src/content/notes/")) {
+        if (!data.title || !data.date) throw new Error(`${relative}: Note frontmatter 不完整`);
+      }
       assertPublicBody(body, relative);
     }
     checked += 1;

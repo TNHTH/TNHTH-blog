@@ -27,6 +27,7 @@ a:hover { color: var(--signal); }
 .muted { color: var(--muted); }
 .accent { color: var(--signal); }
 .focus-ring:focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; }
+.tag { border: 1px solid var(--line); padding: .25rem .5rem; color: var(--muted); font-size: .75rem; }
 @media (max-width: 720px) { .site-shell { width: calc(100% - 32px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
