@@ -7,18 +7,21 @@ const { nodes, edges } = Astro.props;
   <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
     <title id="galaxy-title">内容关系图</title>
     <desc id="galaxy-desc">项目、笔记和主题围绕个人主页形成的关系图。内容链接同时显示在普通页面中。</desc>
+    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="23" ry="16" />
+    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="37" ry="27" transform="rotate(-22 50 50)" />
+    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="45" ry="34" transform="rotate(28 50 50)" />
     {edges.map((edge) => {
       const source = nodes.find((node) => node.id === edge.source);
       const target = nodes.find((node) => node.id === edge.target);
       return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
     })}
     {nodes.map((node) => node.href ? (
-      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} href={node.href} aria-label={node.label} tabindex="0">
+      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-x={node.x} data-node-y={node.y} href={node.href} aria-label={node.label} tabindex="0">
         <circle cx={node.x} cy={node.y} r={node.kind === "project" ? 2.1 : node.kind === "topic" ? 1.5 : 1} />
         <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
       </a>
     ) : (
-      <g class="galaxy-node galaxy-node-center" data-node-id={node.id} aria-hidden="true">
+      <g class="galaxy-node galaxy-node-center" data-node-id={node.id} data-node-x={node.x} data-node-y={node.y} aria-hidden="true">
         <circle cx={node.x} cy={node.y} r="2.8" />
         <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
       </g>
@@ -29,16 +32,50 @@ const { nodes, edges } = Astro.props;
   const root = document.querySelector("[data-galaxy]");
   const svg = root?.querySelector("svg");
   const nodes = [...(root?.querySelectorAll("[data-node-id]") ?? [])];
+  const edges = [...(root?.querySelectorAll(".galaxy-edge") ?? [])];
+  const setStyle = (element: Element, property: string, value: string) => (element as HTMLElement | SVGElement).style.setProperty(property, value);
+  const reset = () => {
+    nodes.forEach((node) => setStyle(node, "--label-opacity", node.classList.contains("galaxy-node-center") ? ".82" : "0"));
+    edges.forEach((edge) => {
+      edge.classList.remove("is-near");
+      setStyle(edge, "--edge-opacity", ".28");
+    });
+  };
+  const activate = (activeId: string | null, pointerX?: number, pointerY?: number) => {
+    let nearestId = activeId;
+    if (!nearestId && pointerX !== undefined && pointerY !== undefined) {
+      nearestId = nodes.reduce<string | null>((nearest, node) => {
+        const nodeX = Number(node.getAttribute("data-node-x"));
+        const nodeY = Number(node.getAttribute("data-node-y"));
+        if (!nearest) return node.getAttribute("data-node-id");
+        const current = nodes.find((item) => item.getAttribute("data-node-id") === nearest);
+        if (!current) return node.getAttribute("data-node-id");
+        const currentDistance = Math.hypot(Number(current.getAttribute("data-node-x")) - pointerX, Number(current.getAttribute("data-node-y")) - pointerY);
+        const nextDistance = Math.hypot(nodeX - pointerX, nodeY - pointerY);
+        return nextDistance < currentDistance ? node.getAttribute("data-node-id") : nearest;
+      }, null);
+    }
+    nodes.forEach((node) => {
+      const id = node.getAttribute("data-node-id");
+      setStyle(node, "--label-opacity", id === nearestId ? ".98" : node.classList.contains("galaxy-node-center") ? ".82" : "0");
+    });
+    edges.forEach((edge) => {
+      const related = nearestId && (edge.getAttribute("data-source") === nearestId || edge.getAttribute("data-target") === nearestId);
+      edge.classList.toggle("is-near", Boolean(related));
+      setStyle(edge, "--edge-opacity", related ? ".9" : ".2");
+    });
+  };
   svg?.addEventListener("pointermove", (event) => {
     const rect = svg.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 100;
     const y = ((event.clientY - rect.top) / rect.height) * 100;
-    nodes.forEach((node) => {
-      const element = node as HTMLElement;
-      const circle = node.querySelector("circle");
-      const dx = Number(circle?.getAttribute("cx")) - x;
-      const dy = Number(circle?.getAttribute("cy")) - y;
-      element.style.setProperty("--node-opacity", String(Math.max(0.18, 1 - Math.hypot(dx, dy) / 28)));
-    });
+    activate(null, x, y);
   });
+  svg?.addEventListener("pointerleave", reset);
+  nodes.forEach((node) => {
+    node.addEventListener("focus", () => activate(node.getAttribute("data-node-id")));
+    node.addEventListener("blur", reset);
+    node.addEventListener("pointerenter", () => activate(node.getAttribute("data-node-id")));
+  });
+  reset();
 </script>

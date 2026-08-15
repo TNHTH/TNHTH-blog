@@ -14,7 +14,7 @@ const selectedTopic = Astro.url.searchParams.get("topic") ?? "";
 
 <BaseLayout title="笔记" description="郭伟浩公开的技术理解、实验记录、阅读与思考。">
   <section class="site-shell mx-auto pt-16 md:pt-24">
-    <SectionHeading eyebrow="02 / 笔记" title="统一内容池" intro="正文优先。来源、项目、系列和摄影信息只在确实存在时出现。" />
+    <SectionHeading eyebrow="笔记" title="记录、思考与实验" intro="正文优先。来源、项目、系列和摄影信息只在确实存在时出现。" />
     <form id="note-search-form" class="mb-8 flex flex-col gap-3 border-y border-[var(--line)] py-5 md:flex-row" role="search" action="/notes" method="get">
       <label class="sr-only" for="note-search">搜索笔记</label>
       <input id="note-search" name="q" value={query} class="focus-ring min-h-11 flex-1 border border-[var(--line)] bg-transparent px-3" type="search" placeholder="搜索标题、摘要或主题" autocomplete="off" />

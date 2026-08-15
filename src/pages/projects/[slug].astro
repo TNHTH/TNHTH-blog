@@ -14,23 +14,24 @@ const notes = await getCollection("notes");
 const relatedNotes = relatedNotesForProject(entry.id, notes);
 const status = statusLabel[entry.data.status];
 const ogImage = entry.data.evidence.find((item) => item.kind === "image" && item.src)?.src;
+const metrics = entry.data.evidence.filter((item) => item.kind === "metric");
 ---
 <BaseLayout title={entry.data.title} description={entry.data.outcome} ogImage={ogImage}>
-  <article class="site-shell mx-auto pt-16 md:pt-24">
-    <div class="eyebrow">Project / {status}</div>
-    <div class="mt-5 grid gap-10 md:grid-cols-[1fr_280px] md:items-end">
-      <div><h1 class="display m-0 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1><p class="muted mt-7 max-w-2xl text-xl leading-9">{entry.data.outcome}</p></div>
-      <div class="text-sm leading-7"><div>{entry.data.period}</div>{entry.data.role && <div class="muted">{entry.data.role}</div>}{entry.data.repo && <a class="focus-ring mt-4 inline-block underline" href={entry.data.repo} target="_blank" rel="noreferrer">打开 GitHub →</a>}</div>
+  <article class="site-shell mx-auto pt-14 md:pt-20">
+    <div class="eyebrow">项目 · {status}</div>
+    <div class="mt-5 grid gap-8 md:grid-cols-[1fr_260px] md:items-end">
+      <div><h1 class="display m-0 max-w-4xl text-5xl leading-tight md:text-7xl">{entry.data.title}</h1><p class="muted mt-6 max-w-2xl text-xl leading-9">{entry.data.outcome}</p></div>
+      <div class="text-base leading-8"><div>{entry.data.period}</div>{entry.data.role && <div class="muted">{entry.data.role}</div>}<div class="mt-4 flex flex-wrap gap-4">{entry.data.repo && <a class="focus-ring underline" href={entry.data.repo} target="_blank" rel="noreferrer">GitHub →</a>}{entry.data.demo && <a class="focus-ring underline" href={entry.data.demo} target="_blank" rel="noreferrer">Demo →</a>}</div></div>
     </div>
 
     {entry.data.evidence.length > 0 && <section class="mt-14 border-y border-[var(--line)] py-8" aria-labelledby="evidence-title">
-      <div class="eyebrow" id="evidence-title">Primary Evidence</div>
-      <div class="mt-5 grid gap-4 md:grid-cols-2">{entry.data.evidence.map((item) => <div class="border border-[var(--line)] p-5"><strong>{item.label}</strong>{item.value && <p class="muted mt-2 font-mono text-sm">{item.value}</p>}</div>)}</div>
+      <div class="eyebrow" id="evidence-title">成果证据</div>
+      <div class="mt-5 grid gap-4 md:grid-cols-2">{entry.data.evidence.map((item) => <div class="border border-[var(--line)] p-5"><strong>{item.label}</strong>{item.value && <p class="muted mt-2 font-mono text-sm">{item.value}</p>}{item.href && <a class="focus-ring mt-3 inline-block underline" href={item.href} target="_blank" rel="noreferrer">查看证据 →</a>}</div>)}</div>
     </section>}
 
-    {entry.data.contributions.length > 0 && <section class="mt-14 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="contributions-title"><div class="eyebrow" id="contributions-title">我的贡献</div><ul class="m-0 grid gap-3 pl-5 leading-8">{entry.data.contributions.map((item) => <li>{item}</li>)}</ul></section>}
-    {entry.data.tech.length > 0 && <section class="mt-12 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="tech-title"><div class="eyebrow" id="tech-title">技术概览</div><div class="flex flex-wrap gap-2">{entry.data.tech.map((item) => <span class="border border-[var(--line)] px-3 py-2 text-sm">{item}</span>)}</div></section>}
-    <div class="prose mt-14 max-w-3xl leading-8"><Content /></div>
+    {metrics.length > 0 && <section class="mt-14 border-t border-[var(--line)] pt-7" aria-labelledby="results-title"><div class="eyebrow" id="results-title">结果</div><div class="mt-5 grid gap-4 md:grid-cols-3">{metrics.map((item) => <div><div class="display text-3xl">{item.value ?? item.label}</div><div class="muted mt-2 text-sm">{item.label}</div></div>)}</div></section>}
+    {entry.data.contributions.length > 0 && <section class="mt-14 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="contributions-title"><div class="eyebrow" id="contributions-title">我的贡献</div><ul class="m-0 grid gap-3 pl-5 text-base leading-8">{entry.data.contributions.map((item) => <li>{item}</li>)}</ul></section>}
+    <section class="mt-12 grid gap-8 border-t border-[var(--line)] pt-7 md:grid-cols-[1fr_2fr]" aria-labelledby="overview-title"><div class="eyebrow" id="overview-title">系统概览</div><div><div class="prose max-w-3xl leading-8"><Content /></div>{entry.data.tech.length > 0 && <div class="mt-8 flex flex-wrap gap-2">{entry.data.tech.map((item) => <span class="tag">{item}</span>)}</div>}</div></section>
     {relatedNotes.length > 0 && <section class="mt-16 border-t border-[var(--line)] pt-7" aria-labelledby="related-notes-title"><div class="eyebrow" id="related-notes-title">关联笔记</div><div class="mt-5 grid gap-3">{relatedNotes.map((note) => <a class="focus-ring border-b border-[var(--line)] py-4" href={`/notes/${note.id}`}><strong>{note.data.title}</strong>{note.data.summary && <span class="muted ml-3">{note.data.summary}</span>}</a>)}</div></section>}
   </article>
 </BaseLayout>

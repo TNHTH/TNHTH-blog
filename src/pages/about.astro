@@ -4,34 +4,43 @@ import { site } from "../../config/site";
 ---
 
 <BaseLayout title={`关于 ${site.name}`}>
-  <section class="site-shell mx-auto grid gap-12 pt-16 md:grid-cols-[1fr_280px] md:pt-24">
+  <section class="site-shell mx-auto grid gap-8 pt-14 md:grid-cols-[1fr_280px] md:pt-20">
     <div>
-      <div class="eyebrow">ABOUT / 关于</div>
-      <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl"><span data-profile="name">{site.name}</span>，工作与世界之间的编辑层。</h1>
+      <div class="eyebrow">关于</div>
+      <h1 class="display mt-5 max-w-4xl text-5xl leading-tight md:text-7xl"><span data-profile="name">{site.name}</span>的项目、笔记与日常观察。</h1>
     </div>
-    <div class="self-end text-sm leading-7">
-      <div class="eyebrow mb-3" data-profile="alias">{site.alias}</div>
+    <div class="self-end text-base leading-8">
       <p class="m-0"><span data-profile="location">{site.location}</span><br /><span data-profile="headline">{site.headline}</span></p>
       <a class="focus-ring mt-5 inline-block underline" href={site.github} data-profile-href="github">GitHub →</a>
     </div>
   </section>
-  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">关于我</div>
-    <div class="max-w-3xl text-base leading-8">
-      <p>我在杭州学习和实践机器人系统、强化学习与工程软件。这里记录已经能够独立成立的公开项目、笔记和判断。</p>
-      <p class="muted">个人笔记的真值源留在本地。公开站点只收录经过人工复核、内容校验与敏感信息扫描的内容。</p>
+  <section class="site-shell home-section mx-auto">
+    <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">关于我</div>
+      <div class="max-w-3xl text-lg leading-9">
+        <p>我目前在杭州电子科技大学学习自动化。这里记录我做过的项目、学过的东西，以及过程中值得留下的实验与思考。</p>
+        <p>我喜欢从一个具体的问题出发，把概念弄明白，把东西真正做出来，再把过程中值得留下的内容记录下来。</p>
+      </div>
     </div>
   </section>
-  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">经历</div><div class="max-w-3xl leading-8"><p>从机器人系统集成、嵌入式控制到强化学习实验，持续关注不同模块之间的接口、证据和真实边界。</p></div>
+  <section class="site-shell home-section mx-auto">
+    <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">经历</div><div class="max-w-3xl text-lg leading-9"><p>从机器人系统集成、嵌入式控制到强化学习实验，持续关注不同模块之间的接口、证据和真实边界。</p></div>
+    </div>
   </section>
-  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">技术与实践</div><div class="flex max-w-3xl flex-wrap gap-2">{site.headline.split(" · ").map((item) => <span class="border border-[var(--line)] px-3 py-2">{item}</span>)}<span class="border border-[var(--line)] px-3 py-2">系统集成</span><span class="border border-[var(--line)] px-3 py-2">公开内容工程</span></div>
+  <section class="site-shell home-section mx-auto">
+    <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">技术与实践</div><div class="flex max-w-3xl flex-wrap gap-2">{site.practice?.map((item) => <span class="tag">{item}</span>)}</div>
+    </div>
   </section>
-  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">其他兴趣</div><div class="max-w-3xl leading-8"><p>阅读、摄影、写作与对日常系统的观察，会以笔记的形式自然出现在同一个内容池中。</p></div>
+  <section class="site-shell home-section mx-auto">
+    <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">其他兴趣</div><div class="max-w-3xl text-lg leading-9"><p>阅读、摄影、写作与对日常系统的观察，会以笔记的形式自然出现在同一个内容池中。</p></div>
+    </div>
   </section>
-  <section class="site-shell mx-auto mt-16 grid gap-8 border-t border-[var(--line)] pt-8 md:grid-cols-[1fr_2fr]">
-    <div class="eyebrow">链接</div><div><a class="focus-ring underline" href={site.github} target="_blank" rel="noreferrer">GitHub →</a></div>
+  <section class="site-shell home-section mx-auto pb-16">
+    <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
+      <div class="eyebrow">链接</div><div><a class="focus-ring underline" href={site.github} target="_blank" rel="noreferrer">GitHub →</a></div>
+    </div>
   </section>
 </BaseLayout>

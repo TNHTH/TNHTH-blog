@@ -44,4 +44,9 @@ describe("publication policy", () => {
     expect(list.entries).toHaveLength(1);
     expect(() => loadAllowList("version: 2\nentries: []")).toThrow();
   });
+
+  it("parses Windows frontmatter line endings", () => {
+    const { data } = readFrontmatter("---\r\ntitle: Note\r\ndate: 2026-08-15\r\nrelatedProjects: [leap-a20]\r\n---\r\nBody");
+    expect(data.relatedProjects).toEqual(["leap-a20"]);
+  });
 });

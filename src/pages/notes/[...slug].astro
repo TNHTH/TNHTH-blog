@@ -13,16 +13,22 @@ const projects = await getCollection("projects");
 const notes = await getCollection("notes");
 const relatedProjects = relatedProjectsForNote(entry, projects);
 const relatedNotes = relatedNotesForNote(entry, notes);
+const contextItems = [
+  entry.data.series,
+  entry.data.location,
+  entry.data.weather,
+  entry.data.equipment?.length ? entry.data.equipment.join(" / ") : undefined,
+].filter(Boolean);
 ---
 
 <BaseLayout title={entry.data.title} description={entry.data.summary}>
-  <article class="site-shell mx-auto pt-16 md:pt-24">
+  <article class="site-shell mx-auto pt-14 md:pt-20">
     <div class="eyebrow">笔记 / {entry.data.date.toLocaleDateString("zh-CN")}</div>
-    <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1>
-    {entry.data.summary && <p class="muted mt-7 max-w-2xl text-lg leading-8">{entry.data.summary}</p>}
-    {entry.data.tags.length > 0 && <div class="mt-7 flex flex-wrap gap-2">{entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>}
-    {entry.data.source && <div class="muted mt-7 border-l-2 border-[var(--signal)] pl-4 text-sm">来源：{entry.data.source.title}{entry.data.source.author && ` · ${entry.data.source.author}`}{entry.data.source.url && <a class="ml-2 underline" href={entry.data.source.url} target="_blank" rel="noreferrer">原始链接 →</a>}</div>}
-    <div class="prose mt-12 max-w-3xl leading-8"><Content /></div>
+    <h1 class="display mt-5 max-w-4xl text-5xl leading-tight md:text-7xl">{entry.data.title}</h1>
+    {entry.data.summary && <p class="muted mt-6 max-w-2xl text-lg leading-8">{entry.data.summary}</p>}
+    {(entry.data.tags.length > 0 || contextItems.length > 0) && <div class="mt-7 flex flex-wrap items-center gap-2">{entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}{contextItems.map((item) => <span class="muted text-sm">{item}</span>)}</div>}
+    {entry.data.source && <div class="muted mt-7 border-l-2 border-[var(--signal)] pl-4 text-base">来源：{entry.data.source.title}{entry.data.source.author && ` · ${entry.data.source.author}`}{entry.data.source.url && <a class="ml-2 underline" href={entry.data.source.url} target="_blank" rel="noreferrer">原始链接 →</a>}</div>}
+    <div class="prose mt-12 max-w-3xl text-[1.06rem] leading-[1.9]"><Content /></div>
     {relatedProjects.length > 0 && <section class="mt-16 border-t border-[var(--line)] pt-7" aria-labelledby="related-projects-title"><div class="eyebrow" id="related-projects-title">关联项目</div><div class="mt-5 grid gap-3">{relatedProjects.map((project) => <a class="focus-ring border-b border-[var(--line)] py-4" href={`/projects/${project.id}`}><strong>{project.data.title}</strong><span class="muted ml-3">{project.data.outcome}</span></a>)}</div></section>}
     {relatedNotes.length > 0 && <section class="mt-12 border-t border-[var(--line)] pt-7" aria-labelledby="related-notes-title"><div class="eyebrow" id="related-notes-title">相关笔记</div><div class="mt-5 grid gap-3">{relatedNotes.map((note) => <a class="focus-ring border-b border-[var(--line)] py-4" href={`/notes/${note.id}`}>{note.data.title}</a>)}</div></section>}
   </article>
