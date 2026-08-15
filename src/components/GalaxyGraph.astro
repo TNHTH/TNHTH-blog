@@ -21,7 +21,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       {edges.map((edge) => {
         const source = nodes.find((node) => node.id === edge.source);
         const target = nodes.find((node) => node.id === edge.target);
-        return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
+        return source && target ? <line class={`galaxy-edge galaxy-edge-${edge.kind}`} data-source={edge.source} data-target={edge.target} data-edge-kind={edge.kind} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
       })}
       {nodes.map((node) => node.href ? (
         <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} transform={`translate(${node.x} ${node.y})`}>
@@ -44,7 +44,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 <script>
   import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
 
-  type GalaxySimulationNode = SimulationNodeDatum & { id: string; kind: string; x: number; y: number };
+  type GalaxySimulationNode = SimulationNodeDatum & { id: string; kind: string; x: number; y: number; homeX: number; homeY: number };
   type GalaxySimulationLink = SimulationLinkDatum<GalaxySimulationNode> & { source: string | GalaxySimulationNode; target: string | GalaxySimulationNode };
 
   const root = document.querySelector<HTMLElement>("[data-galaxy]");
@@ -64,6 +64,8 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       kind: element.dataset.nodeKind ?? "note",
       x: Number(element.dataset.nodeX ?? 50),
       y: Number(element.dataset.nodeY ?? 50),
+      homeX: Number(element.dataset.nodeX ?? 50),
+      homeY: Number(element.dataset.nodeY ?? 50),
     })) as GalaxySimulationNode[];
     const links = edgeElements.map((element) => ({
       source: element.dataset.source ?? "",
@@ -77,12 +79,30 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     let restoreRaf: number | undefined;
     let panRaf: number | undefined;
     let pendingPan: { dx: number; dy: number } | null = null;
+    let homeStrength = reducedMotion ? 0 : .012;
+    let restoring = false;
+    let restoreStartedAt = 0;
+
+    const radiusByKind: Record<string, number> = { project: 2.3, topic: 1.55, center: 2.9, note: 1.05 };
+    const homeForce = () => {
+      let simulationNodes: GalaxySimulationNode[] = [];
+      const force = (alpha: number) => {
+        for (const node of simulationNodes) {
+          const strength = homeStrength * alpha;
+          node.vx = (node.vx ?? 0) + (node.homeX - node.x) * strength;
+          node.vy = (node.vy ?? 0) + (node.homeY - node.y) * strength;
+        }
+      };
+      force.initialize = (nextNodes: GalaxySimulationNode[]) => { simulationNodes = nextNodes; };
+      return force;
+    };
 
     const simulation = forceSimulation<GalaxySimulationNode>(initialNodes)
       .force("link", forceLink<GalaxySimulationNode, GalaxySimulationLink>(links).id((node) => node.id).distance((link) => typeof link.source === "string" || typeof link.source === "number" ? 13 : link.source.kind === "center" ? 19 : 13).strength(.5))
       .force("charge", forceManyBody().strength(-17))
       .force("collide", forceCollide().radius((node: any) => node.kind === "project" ? 5 : node.kind === "center" ? 4 : 3.1).strength(.9))
-      .force("center", forceCenter(50, 50).strength(.16))
+      .force("center", forceCenter(64, 48).strength(.16))
+      .force("home", homeForce())
       .alphaDecay(.035)
       .alphaTarget(0);
 
@@ -103,6 +123,13 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         element.setAttribute("transform", `translate(${node.x} ${node.y})`);
         element.dataset.nodeX = String(node.x);
         element.dataset.nodeY = String(node.y);
+        const label = element.querySelector("text");
+        if (label) {
+          const radius = radiusByKind[node.kind] ?? 1.05;
+          const placeLeft = node.x > 76;
+          label.setAttribute("x", String(placeLeft ? -(radius + 2) : radius + 2));
+          label.setAttribute("text-anchor", placeLeft ? "end" : "start");
+        }
       });
       links.forEach((link, index) => {
         const source = typeof link.source === "string" ? byId.get(link.source) : link.source;
@@ -157,10 +184,19 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         requestAnimationFrame(animate);
       }
     };
+    const finishRestore = () => {
+      restoring = false;
+      homeStrength = reducedMotion ? 0 : .012;
+      simulation.alphaTarget(0);
+      root.dataset.graphMode = "quiet";
+      setStatus("关系图处于安静模式");
+    };
     const cancelRestore = () => {
       window.clearTimeout(restoreTimer);
       if (restoreRaf !== undefined) window.cancelAnimationFrame(restoreRaf);
       restoreRaf = undefined;
+      restoring = false;
+      homeStrength = reducedMotion ? 0 : .012;
     };
     const enterExplore = () => {
       cancelRestore();
@@ -185,25 +221,57 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         restoreRaf = undefined;
         view.x = 0; view.y = 0; view.k = 1;
         setView();
-        hero?.classList.remove("is-exploring");
-        root.dataset.graphMode = "quiet";
-        setStatus("关系图处于安静模式");
+        restoreRaf = undefined;
       };
       restoreRaf = window.requestAnimationFrame(animate);
     };
+    const restoreNodes = () => {
+      for (const node of initialNodes) {
+        node.fx = null;
+        node.fy = null;
+        node.vx = 0;
+        node.vy = 0;
+        node.x = node.homeX;
+        node.y = node.homeY;
+      }
+      render();
+    };
+    const startRestore = () => {
+      cancelRestore();
+      restoring = true;
+      restoreStartedAt = performance.now();
+      hero?.classList.remove("is-exploring");
+      root.dataset.graphMode = "restoring";
+      setStatus("关系图正在恢复默认布局");
+      if (reducedMotion) {
+        restoreNodes();
+        view.x = 0;
+        view.y = 0;
+        view.k = 1;
+        setView();
+        finishRestore();
+        return;
+      }
+      homeStrength = .22;
+      simulation.alpha(.55).alphaTarget(.08).restart();
+      restoreView();
+      const waitForRestore = () => {
+        if (!restoring) return;
+        const settled = initialNodes.every((node) => Math.hypot(node.x - node.homeX, node.y - node.homeY) < .8 && Math.hypot(node.vx ?? 0, node.vy ?? 0) < .2);
+        if (settled || performance.now() - restoreStartedAt > 1300) {
+          finishRestore();
+          return;
+        }
+        window.requestAnimationFrame(waitForRestore);
+      };
+      window.requestAnimationFrame(waitForRestore);
+    };
     const scheduleRestore = () => {
       window.clearTimeout(restoreTimer);
-      restoreTimer = window.setTimeout(() => {
-        if (!drag) restoreView();
-      }, 650);
+      restoreTimer = window.setTimeout(() => { if (!drag) startRestore(); }, 160);
     };
     const resetView = () => {
-      cancelRestore();
-      view.x = 0; view.y = 0; view.k = 1;
-      setView();
-      hero?.classList.remove("is-exploring");
-      root.dataset.graphMode = "quiet";
-      setStatus("关系图处于安静模式");
+      startRestore();
     };
     const flushPan = () => {
       panRaf = undefined;
@@ -251,6 +319,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
           if (node) {
             const point = graphPoint(pointer);
             node.fx = point.x; node.fy = point.y;
+            render();
           }
         } else {
           queuePan(dx, dy);
@@ -269,7 +338,8 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       if (completed.kind === "node" && completed.id) {
         const node = byId.get(completed.id);
         if (node) { node.fx = null; node.fy = null; ripple({ x: node.x, y: node.y }); }
-        simulation.alphaTarget(0);
+        homeStrength = reducedMotion ? 0 : .22;
+        simulation.alpha(.55).alphaTarget(.08).restart();
       }
       if (completed.moved) suppressClick = true;
       window.setTimeout(() => { suppressClick = false; }, 80);

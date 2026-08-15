@@ -66,29 +66,74 @@ export function relatedNotesForNote(note: NoteEntry, notes: NoteEntry[]): NoteEn
   return scored.filter(({ score }) => score > 0).sort((a, b) => b.score - a.score).slice(0, 5).map(({ candidate }) => candidate);
 }
 
+export type GalaxyEdgeKind = "core" | "project-topic" | "note-project" | "note-topic";
 export interface GalaxyNode { id: string; label: string; kind: "center" | "project" | "topic" | "note"; x: number; y: number; href?: string; }
-export interface GalaxyEdge { source: string; target: string; }
+export interface GalaxyEdge { source: string; target: string; kind: GalaxyEdgeKind; }
 
 export function buildGalaxyModel(projects: ProjectEntry[], notes: NoteEntry[]) {
-  const nodes: GalaxyNode[] = [{ id: "center", label: "郭伟浩", kind: "center", x: 50, y: 50 }];
-  const edges: GalaxyEdge[] = [];
+  const layout = {
+    centerX: 64,
+    centerY: 48,
+    projectRx: 18,
+    projectRy: 16,
+    topicRx: 26,
+    topicRy: 23,
+    noteRx: 32,
+    noteRy: 29,
+  } as const;
   const featuredProjects = sortProjects(projects).slice(0, 6);
-  const topics = [...topicIndex(projects, notes).values()].sort((a, b) => (b.projects.length + b.notes.length) - (a.projects.length + a.notes.length)).slice(0, 8);
+  const allTopics = topicIndex(projects, notes);
+  const topics = [...allTopics.values()].sort((a, b) => (b.projects.length + b.notes.length) - (a.projects.length + a.notes.length)).slice(0, 8);
   const sampleNotes = sortNotes(notes).slice(0, 10);
+  const selectedTopicSlugs = new Set(topics.map((topic) => topicSlug(topic.name)));
+  for (const note of sampleNotes) {
+    for (const tag of note.data.tags.slice(0, 2)) {
+      const slug = topicSlug(tag);
+      const topic = allTopics.get(slug);
+      if (topic && !selectedTopicSlugs.has(slug)) {
+        selectedTopicSlugs.add(slug);
+        topics.push(topic);
+      }
+    }
+  }
+  const nodes: GalaxyNode[] = [{ id: "center", label: "郭伟浩", kind: "center", x: layout.centerX, y: layout.centerY }];
+
   featuredProjects.forEach((project, index) => {
     const angle = (Math.PI * 2 * index) / Math.max(featuredProjects.length, 1);
-    const node = { id: `project:${project.id}`, label: project.data.title, kind: "project" as const, x: 50 + Math.cos(angle) * 29, y: 50 + Math.sin(angle) * 25, href: `/projects/${project.id}` };
-    nodes.push(node); edges.push({ source: "center", target: node.id });
-    project.data.topics.slice(0, 3).forEach((topic) => edges.push({ source: node.id, target: `topic:${topicSlug(topic)}` }));
+    nodes.push({ id: `project:${project.id}`, label: project.data.title, kind: "project", x: layout.centerX + Math.cos(angle) * layout.projectRx, y: layout.centerY + Math.sin(angle) * layout.projectRy, href: `/projects/${project.id}` });
   });
+
   topics.forEach((topic, index) => {
     const angle = (Math.PI * 2 * index) / Math.max(topics.length, 1) + 0.35;
-    nodes.push({ id: `topic:${topicSlug(topic.name)}`, label: topic.name, kind: "topic", x: 50 + Math.cos(angle) * 40, y: 50 + Math.sin(angle) * 37, href: `/topics/${topicSlug(topic.name)}` });
+    nodes.push({ id: `topic:${topicSlug(topic.name)}`, label: topic.name, kind: "topic", x: layout.centerX + Math.cos(angle) * layout.topicRx, y: layout.centerY + Math.sin(angle) * layout.topicRy, href: `/topics/${topicSlug(topic.name)}` });
   });
+
   sampleNotes.forEach((note, index) => {
     const angle = (Math.PI * 2 * index) / Math.max(sampleNotes.length, 1) + 0.15;
-    const node = { id: `note:${note.id}`, label: note.data.title, kind: "note" as const, x: 50 + Math.cos(angle) * 46, y: 50 + Math.sin(angle) * 43, href: `/notes/${note.id}` };
-    nodes.push(node); note.data.tags.slice(0, 2).forEach((tag) => edges.push({ source: node.id, target: `topic:${topicSlug(tag)}` }));
+    nodes.push({ id: `note:${note.id}`, label: note.data.title, kind: "note", x: layout.centerX + Math.cos(angle) * layout.noteRx, y: layout.centerY + Math.sin(angle) * layout.noteRy, href: `/notes/${note.id}` });
   });
-  return { nodes, edges: edges.filter((edge) => nodes.some((node) => node.id === edge.source) && nodes.some((node) => node.id === edge.target)) };
+
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edgeKeys = new Set<string>();
+  const edges: GalaxyEdge[] = [];
+  const addEdge = (source: string, target: string, kind: GalaxyEdgeKind) => {
+    const key = `${source}→${target}`;
+    if (nodeIds.has(source) && nodeIds.has(target) && !edgeKeys.has(key)) {
+      edgeKeys.add(key);
+      edges.push({ source, target, kind });
+    }
+  };
+
+  for (const project of featuredProjects) {
+    const projectId = `project:${project.id}`;
+    addEdge("center", projectId, "core");
+    for (const topic of project.data.topics.slice(0, 3)) addEdge(projectId, `topic:${topicSlug(topic)}`, "project-topic");
+  }
+  for (const note of sampleNotes) {
+    const noteId = `note:${note.id}`;
+    for (const projectId of note.data.relatedProjects) addEdge(noteId, `project:${projectId}`, "note-project");
+    for (const tag of note.data.tags.slice(0, 2)) addEdge(noteId, `topic:${topicSlug(tag)}`, "note-topic");
+  }
+
+  return { nodes, edges };
 }
