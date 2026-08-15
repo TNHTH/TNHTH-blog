@@ -37,38 +37,45 @@ a:hover { color: var(--signal); }
 .project-proof { display: flex; min-height: 8rem; flex-direction: column; justify-content: end; border-bottom: 1px solid var(--line); padding-bottom: .75rem; color: var(--signal); font-family: var(--mono); font-size: .72rem; }
 .note-list-item { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; border-top: 1px solid var(--line); padding: 1.5rem 0; }
 .note-list-item time { color: var(--signal); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
-.home-hero { display: grid; align-items: start; gap: 2rem; padding: 3.25rem 0 4rem; transition: grid-template-columns .65s cubic-bezier(.22, 1, .36, 1); }
-.home-hero-copy { max-width: 34rem; transition: transform .65s cubic-bezier(.22, 1, .36, 1), opacity .4s ease; }
+.home-hero { position: relative; min-height: clamp(30rem, 68svh, 40rem); overflow: hidden; isolation: isolate; }
+.home-hero-copy { position: relative; z-index: 2; max-width: 34rem; padding: clamp(4rem, 10vw, 7rem) 0 5rem; transition: transform .52s cubic-bezier(.22, 1, .36, 1), opacity .32s ease; }
 .home-hero-name { font-size: clamp(3.75rem, 7vw, 5.5rem); line-height: .98; }
 .home-hero-description { max-width: 31rem; font-size: 1.1rem; line-height: 1.95; }
 .home-hero-meta { color: var(--muted); font-size: .92rem; line-height: 1.8; }
-.home-hero-galaxy { min-height: 24rem; }
+.home-hero-galaxy { position: absolute; inset: 0; z-index: 0; min-height: 0; }
 .home-section { padding: 4.5rem 0; border-top: 1px solid var(--line); }
 .short-about { max-width: 47rem; font-size: clamp(1.7rem, 3vw, 2.8rem); line-height: 1.45; }
-.home-hero-galaxy { transition: min-height .65s cubic-bezier(.22, 1, .36, 1); }
-.galaxy { position: relative; min-height: 24rem; overflow: hidden; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--signal) 7%, var(--paper)) 0, var(--paper) 63%); cursor: grab; }
+.galaxy { position: relative; width: 100%; height: 100%; min-height: 100%; overflow: hidden; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--signal) 7%, var(--paper)) 0, var(--paper) 63%); cursor: grab; }
 .galaxy:active { cursor: grabbing; }
-.galaxy svg { display: block; width: 100%; height: auto; min-height: 24rem; user-select: none; touch-action: none; }
+.galaxy::before { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, var(--paper) 0%, color-mix(in srgb, var(--paper) 96%, transparent) 27%, color-mix(in srgb, var(--paper) 50%, transparent) 45%, transparent 68%); content: ""; opacity: .96; pointer-events: none; transition: opacity .52s ease; }
+.galaxy svg { position: relative; z-index: 0; display: block; width: 100%; height: 100%; min-height: 100%; user-select: none; touch-action: none; }
 .galaxy-backdrop { fill: transparent; pointer-events: all; }
 .galaxy-stage { transform-origin: 50% 50%; }
-.galaxy-edge { --edge-opacity: .24; stroke: var(--line); stroke-width: .24; opacity: var(--edge-opacity); pointer-events: none; transition: opacity .18s ease, stroke .18s ease; }
+.galaxy-edge { --edge-opacity: .2; stroke: var(--line); stroke-width: .24; stroke-dasharray: 1.2 2.8; opacity: var(--edge-opacity); pointer-events: none; transition: opacity .18s ease, stroke .18s ease; }
 .galaxy-edge.is-near { --edge-opacity: .9; stroke: var(--signal); }
 .galaxy-edge.is-muted { --edge-opacity: .06; }
 .galaxy-node { --label-opacity: 0; cursor: pointer; fill: var(--ink); pointer-events: all; transition: opacity .22s ease; }
-.galaxy-node circle { --node-fill: var(--ink); fill: var(--node-fill); stroke: var(--paper); stroke-width: .42; transition: fill .18s ease, r .18s ease, stroke .18s ease; }
+.galaxy-node circle { --node-fill: var(--ink); fill: var(--node-fill); stroke: var(--paper); stroke-width: .42; transform-box: fill-box; transform-origin: center; transition: fill .18s ease, r .18s ease, stroke .18s ease; }
 .galaxy-node text { fill: var(--ink); font-family: var(--serif); font-size: 2.15px; opacity: var(--label-opacity); pointer-events: none; transition: opacity .18s ease; }
 .galaxy-node:hover circle, .galaxy-node:focus-visible circle, .galaxy-node.is-active circle { fill: var(--signal); }
 .galaxy-node.is-muted { opacity: .14; }
 .galaxy-node:focus { outline: none; }
+.galaxy-node a:focus { outline: none; }
 .galaxy-node:focus-visible circle, .galaxy-node:focus-within circle { stroke: var(--signal); stroke-width: .8; filter: drop-shadow(0 0 1.5px color-mix(in srgb, var(--signal) 55%, transparent)); }
 .galaxy-ripple { fill: none; stroke: var(--signal); stroke-width: .35; opacity: .48; pointer-events: none; }
-.galaxy-exit { position: absolute; top: 1rem; right: 1rem; z-index: 2; visibility: hidden; border: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 88%, transparent); padding: .45rem .7rem; color: var(--signal); font-family: var(--serif); font-size: .78rem; opacity: 0; pointer-events: none; transition: opacity .25s ease, background-color .2s ease, visibility .25s ease; }
-.galaxy-exit:hover { background: var(--paper-soft); }
-.home-hero.is-exploring { grid-template-columns: 1fr; }
 .home-hero.is-exploring .home-hero-copy { transform: translateX(-120%); opacity: 0; pointer-events: none; }
-.home-hero.is-exploring .home-hero-galaxy { grid-column: 1 / -1; min-height: 38rem; }
-.home-hero.is-exploring .galaxy, .home-hero.is-exploring .galaxy svg { min-height: 38rem; }
-.home-hero.is-exploring .galaxy-exit { visibility: visible; opacity: 1; pointer-events: auto; }
+.home-hero.is-exploring .galaxy::before { opacity: 0; }
+.galaxy-edge.is-near { animation: galaxy-edge-flow 3.6s linear infinite; }
+.galaxy-node-project circle { animation: galaxy-breathe 5.8s ease-in-out infinite; }
+.galaxy-node-topic circle { animation: galaxy-breathe 7.2s ease-in-out infinite reverse; }
+.galaxy-node-note circle { animation: galaxy-twinkle 5.4s ease-in-out infinite; }
+.galaxy-node-center > circle:not(.galaxy-center-ring) { animation: galaxy-breathe 6.8s ease-in-out infinite; }
+.galaxy-center-ring { fill: none; stroke: var(--signal); stroke-width: .22; opacity: 0; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: galaxy-center-pulse 5.2s ease-out infinite; }
+.galaxy-center-ring-delayed { animation-delay: 2.6s; }
+@keyframes galaxy-edge-flow { to { stroke-dashoffset: -12; } }
+@keyframes galaxy-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes galaxy-twinkle { 0%, 100% { opacity: .82; transform: scale(.88); } 50% { opacity: 1; transform: scale(1.12); } }
+@keyframes galaxy-center-pulse { 0% { opacity: .24; transform: scale(.92); } 70%, 100% { opacity: 0; transform: scale(1.85); } }
 .galaxy-node-project { --node-fill: var(--signal); }
 .galaxy-node-topic { --node-fill: var(--ink); }
 .galaxy-node-note { --node-fill: var(--muted); }
@@ -83,16 +90,16 @@ a:hover { color: var(--signal); }
 .prose pre { overflow-x: auto; border: 1px solid var(--line); background: var(--paper-soft); padding: 1rem; font-family: var(--mono); font-size: .85rem; line-height: 1.6; }
 .prose code { font-family: var(--mono); font-size: .9em; }
 .prose a { color: var(--signal); text-decoration: underline; text-underline-offset: .2em; }
-@media (min-width: 768px) { .home-hero { grid-template-columns: minmax(0, 1.05fr) minmax(22rem, .95fr); min-height: 28rem; } }
+@media (min-width: 768px) { .home-hero { min-height: clamp(32rem, 68svh, 40rem); } }
 @media (max-width: 720px) {
   .note-list-item { grid-template-columns: 1fr; gap: .5rem; }
-  .galaxy, .galaxy svg { min-height: 22rem; }
-  .home-hero { padding: 2.75rem 0 3.5rem; }
+  .home-hero { min-height: 34rem; }
+  .home-hero-copy { padding: 3.5rem 0 4rem; }
   .home-hero-description { font-size: 1rem; }
-  .home-hero.is-exploring .home-hero-copy { position: absolute; transform: translateX(-120%); }
-  .home-hero.is-exploring .home-hero-galaxy, .home-hero.is-exploring .galaxy, .home-hero.is-exploring .galaxy svg { min-height: 30rem; }
+  .galaxy-node-project text, .galaxy-node-center text { opacity: .76 !important; }
 }
 @media (max-width: 720px) { .site-shell { width: calc(100% - 32px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .galaxy-edge.is-near, .galaxy-node-project circle, .galaxy-node-topic circle, .galaxy-node-note circle, .galaxy-node-center circle, .galaxy-center-ring { animation: none; }
 }

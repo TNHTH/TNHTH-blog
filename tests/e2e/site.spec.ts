@@ -38,8 +38,10 @@ test("首页星系只显示局部标签并增强局部关系", async ({ page }) 
   await galaxy.locator("svg").dispatchEvent("wheel", { bubbles: true, cancelable: true, clientX: 700, clientY: 300, deltaY: -400 });
   await expect(galaxy).toHaveAttribute("data-graph-mode", "explore");
   await expect(page.locator(".home-hero")).toHaveClass(/is-exploring/);
-  await galaxy.getByRole("button", { name: "返回介绍" }).click();
+  await expect(galaxy.locator("[data-galaxy-exit]")).toHaveCount(0);
+  await page.waitForTimeout(1_100);
   await expect(galaxy).toHaveAttribute("data-graph-mode", "quiet");
+  await expect(page.locator(".home-hero")).not.toHaveClass(/is-exploring/);
   expect(consoleErrors).toEqual([]);
 });
 
