@@ -1,3 +1,4 @@
 ---
-return Astro.redirect("/notes");
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
 ---
+<LegacyRedirect source="/writing" target="/notes" />

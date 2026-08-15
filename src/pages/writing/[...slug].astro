@@ -2,5 +2,7 @@
 export async function getStaticPaths() {
   return [{ params: { slug: "spec-driven-development" } }];
 }
-return Astro.redirect(`/notes/${Astro.params.slug}`);
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
+const target = `/notes/${Astro.params.slug}`;
 ---
+<LegacyRedirect source={`/writing/${Astro.params.slug}`} target={target} />

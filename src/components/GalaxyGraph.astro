@@ -13,7 +13,7 @@ const { nodes, edges } = Astro.props;
       return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
     })}
     {nodes.map((node) => node.href ? (
-      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} href={node.href} aria-label={node.label}>
+      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} href={node.href} aria-label={node.label} tabindex="0">
         <circle cx={node.x} cy={node.y} r={node.kind === "project" ? 2.1 : node.kind === "topic" ? 1.5 : 1} />
         <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
       </a>

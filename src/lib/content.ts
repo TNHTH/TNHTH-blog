@@ -3,6 +3,15 @@ import type { CollectionEntry } from "astro:content";
 export type ProjectEntry = CollectionEntry<"projects">;
 export type NoteEntry = CollectionEntry<"notes">;
 
+export function assertContentRelationships(projects: ProjectEntry[], notes: NoteEntry[]): void {
+  const projectIds = new Set(projects.map((project) => project.id));
+  for (const note of notes) {
+    for (const projectId of note.data.relatedProjects) {
+      if (!projectIds.has(projectId)) throw new Error(`Note ${note.id} references missing project ${projectId}`);
+    }
+  }
+}
+
 export function sortProjects(entries: ProjectEntry[]): ProjectEntry[] {
   return [...entries].sort((a, b) => {
     const featured = Number(b.data.featured) - Number(a.data.featured);

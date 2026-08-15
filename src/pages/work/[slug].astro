@@ -2,5 +2,7 @@
 export async function getStaticPaths() {
   return ["dashgo-rl-navigation", "dual-arm-robotics", "leap-a20"].map((slug) => ({ params: { slug } }));
 }
-return Astro.redirect(`/projects/${Astro.params.slug}`);
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
+const target = `/projects/${Astro.params.slug}`;
 ---
+<LegacyRedirect source={`/work/${Astro.params.slug}`} target={target} />

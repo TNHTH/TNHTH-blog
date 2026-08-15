@@ -51,7 +51,9 @@ pnpm hooks:install
 相关命令：
 
 ```text
-pnpm content:sync     # 从已审批来源生成公开快照
+pnpm publisher prepare --dry-run  # 生成 proposal manifest，不修改公开快照
+pnpm publisher apply --manifest <file>  # 重新 hash、校验并原子发布
+pnpm publisher revoke --entry projects/<slug> --confirm  # 撤回公开内容
 pnpm content:verify   # 校验已提交快照
 pnpm audit:public     # 扫描秘密、个人信息、路径和私有链接
 pnpm sync:github      # 只读取 config/public-repos.yml 中的仓库

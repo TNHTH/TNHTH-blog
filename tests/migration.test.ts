@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assertMigrationLedger, bodyHash, normalizeMarkdownBody } from "../src/lib/migration-ledger";
+import { assertContentRelationships } from "../src/lib/content";
 
 describe("migration ledger invariants", () => {
   it("hashes only normalized markdown body", () => {
@@ -19,5 +20,9 @@ describe("migration ledger invariants", () => {
       bodyIntegrity: { oldNormalizedSha256: "same", newNormalizedSha256: "same" },
       mediaRefs: [{ source: "image.jpg", status: "pending-sanitization" }],
     }])).toThrow(/media/);
+  });
+
+  it("rejects references to missing projects", () => {
+    expect(() => assertContentRelationships([], [{ id: "note", data: { relatedProjects: ["missing"] } } as never])).toThrow(/missing project/);
   });
 });

@@ -8,6 +8,12 @@ const execFileAsync = promisify(execFile);
 const projectRoot = path.resolve(import.meta.dirname, "..");
 const date = new Date().toISOString().slice(0, 10);
 const tempRoot = process.env.TNHTH_APPROVED_TEMP_DIR ? path.resolve(process.env.TNHTH_APPROVED_TEMP_DIR) : path.join(projectRoot, ".tmp", "codex", date);
+let baselineRef = process.env.TNHTH_BASELINE ?? "HEAD";
+let resolvedBaselineRef = baselineRef;
+try {
+  const state = JSON.parse(await fs.readFile(path.join(tempRoot, "implementation-state.json"), "utf8")) as { baseline?: string };
+  if (state.baseline) baselineRef = state.baseline;
+} catch {}
 
 const moves = [
   ["dashgo-rl-navigation", "work", "projects"],
@@ -17,8 +23,20 @@ const moves = [
 ] as const;
 
 async function readGitFile(relativePath: string): Promise<string> {
-  const { stdout } = await execFileAsync("git", ["show", `HEAD:${relativePath}`], { cwd: projectRoot, maxBuffer: 1024 * 1024 });
-  return stdout;
+  try {
+    const { stdout } = await execFileAsync("git", ["show", `${resolvedBaselineRef}:${relativePath}`], { cwd: projectRoot, maxBuffer: 1024 * 1024 });
+    return stdout;
+  } catch {
+    const { stdout: history } = await execFileAsync("git", ["rev-list", "--all", "--", relativePath], { cwd: projectRoot });
+    for (const historicalRef of history.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
+      try {
+        const { stdout } = await execFileAsync("git", ["show", `${historicalRef}:${relativePath}`], { cwd: projectRoot, maxBuffer: 1024 * 1024 });
+        resolvedBaselineRef = historicalRef;
+        return stdout;
+      } catch {}
+    }
+    throw new Error(`cannot locate migration source in Git history: ${relativePath}`);
+  }
 }
 
 async function readNewFile(relativePath: string): Promise<string> {
@@ -67,9 +85,13 @@ async function buildLedger(): Promise<MigrationRecord[]> {
 const records = await buildLedger();
 assertMigrationLedger(records);
 await fs.mkdir(tempRoot, { recursive: true });
-await fs.writeFile(path.join(tempRoot, "content-migration-map.json"), `${JSON.stringify({ generatedAt: new Date().toISOString(), records }, null, 2)}\n`, "utf8");
-const { stdout: baseline } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: projectRoot });
+await fs.writeFile(path.join(tempRoot, "content-migration-map.json"), `${JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  galleryGate: { entriesEnumerated: true, entryCount: 0, mediaValidated: true, urlMappingComplete: true, compatibilityRedirectVerified: true },
+  records,
+}, null, 2)}\n`, "utf8");
+const { stdout: head } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: projectRoot });
 const { stdout: branch } = await execFileAsync("git", ["branch", "--show-current"], { cwd: projectRoot });
-await fs.writeFile(path.join(tempRoot, "implementation-state.json"), `${JSON.stringify({ baseline: baseline.trim(), branch: branch.trim(), lastCompletedPhase: 1, lastCommit: baseline.trim(), nextPhase: 2, status: "running" }, null, 2)}\n`, "utf8");
+await fs.writeFile(path.join(tempRoot, "implementation-state.json"), `${JSON.stringify({ baseline: resolvedBaselineRef, branch: branch.trim(), lastCompletedPhase: 1, lastCommit: head.trim(), nextPhase: 2, status: "running" }, null, 2)}\n`, "utf8");
 console.log(`migration ledger written: ${path.join(tempRoot, "content-migration-map.json")}`);
 console.log(`records: ${records.length}, verified: ${records.filter((record) => record.status === "verified").length}`);

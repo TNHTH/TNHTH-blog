@@ -20,6 +20,7 @@ pnpm audit:public    扫描秘密、PII、本地路径与私有链接
 pnpm check           Astro 与 TypeScript 检查
 pnpm test            Vitest 测试
 pnpm build           生产构建
+pnpm test:e2e        portable dist 浏览器 smoke
 ```
 
 ## 2. 修改资料
@@ -35,7 +36,7 @@ pnpm build           生产构建
 
 ## 3. 新增或修改文章
 
-公开内容位于 `src/content/work`、`src/content/notes` 和 `src/content/writing`。每篇内容都必须符合 `src/content.config.ts` 的 schema，填写标题、摘要、日期、类型、标签等字段；Work 还必须明确 `role`、`contribution`、`status`、`evidence` 和 `repo`。
+公开内容位于 `src/content/projects` 和 `src/content/notes`。每篇内容都必须符合 `src/content.config.ts` 的 schema；Project 还必须明确 `outcome`、`status`、`period` 和贡献边界，Note 以标题、日期和正文为核心，其他字段按需出现。
 
 不要把私人 vault、审批清单、原始日记、HR 聊天、Offer 对比、会议记录、内部汇报、凭据、Cookie、Token、数据库、日志、绝对路径或未经授权的照片复制到这里。来自高风险来源的文章必须先形成脱敏公开版，并在私有审批清单中重新计算哈希；审批清单永不提交到本仓库。
 
@@ -59,7 +60,7 @@ pnpm build           生产构建
 
 ## 6. 链接和品牌迁移检查
 
-如果调整站点地址、仓库地址或品牌，必须同步检查：`package.json`、`astro.config.mjs`、`.env.example`、`src/data/profile.json`、`src/layouts/BaseLayout.astro`、`src/pages/admin.astro`、`src/scripts/live-content.ts`、README、GitHub Actions 与 canonical URL。完成后全仓搜索旧地址，并用浏览器检查首页、About、内容详情和 `/admin`。
+如果调整站点地址、仓库地址或品牌，必须同步检查：`package.json`、`astro.config.mjs`、`.env.example`、`src/data/profile.json`、`src/layouts/BaseLayout.astro`、`src/pages/admin.astro`、README、GitHub Actions 与 canonical URL。完成后全仓搜索旧地址，并用浏览器检查首页、About、内容详情和 `/admin`。
 
 ## 7. 本地文件与安全
 

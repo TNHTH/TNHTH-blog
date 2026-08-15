@@ -20,7 +20,7 @@ const relatedNotes = relatedNotesForNote(entry, notes);
     <div class="eyebrow">笔记 / {entry.data.date.toLocaleDateString("zh-CN")}</div>
     <h1 class="display mt-5 max-w-4xl text-6xl leading-[.95] md:text-8xl">{entry.data.title}</h1>
     {entry.data.summary && <p class="muted mt-7 max-w-2xl text-lg leading-8">{entry.data.summary}</p>}
-    <div class="mt-7 flex flex-wrap gap-2">{entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>
+    {entry.data.tags.length > 0 && <div class="mt-7 flex flex-wrap gap-2">{entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}</div>}
     {entry.data.source && <div class="muted mt-7 border-l-2 border-[var(--signal)] pl-4 text-sm">来源：{entry.data.source.title}{entry.data.source.author && ` · ${entry.data.source.author}`}{entry.data.source.url && <a class="ml-2 underline" href={entry.data.source.url} target="_blank" rel="noreferrer">原始链接 →</a>}</div>}
     <div class="prose mt-12 max-w-3xl leading-8"><Content /></div>
     {relatedProjects.length > 0 && <section class="mt-16 border-t border-[var(--line)] pt-7" aria-labelledby="related-projects-title"><div class="eyebrow" id="related-projects-title">关联项目</div><div class="mt-5 grid gap-3">{relatedProjects.map((project) => <a class="focus-ring border-b border-[var(--line)] py-4" href={`/projects/${project.id}`}><strong>{project.data.title}</strong><span class="muted ml-3">{project.data.outcome}</span></a>)}</div></section>}

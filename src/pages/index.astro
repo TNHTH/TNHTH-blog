@@ -4,12 +4,13 @@ import EmptyState from "../components/EmptyState.astro";
 import GalaxyGraph from "../components/GalaxyGraph.astro";
 import NoteListItem from "../components/NoteListItem.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import { buildGalaxyModel, sortNotes, sortProjects } from "../lib/content";
+import { assertContentRelationships, buildGalaxyModel, sortNotes, sortProjects } from "../lib/content";
 import { getCollection } from "astro:content";
 import { site } from "../../config/site";
 
 const projects = sortProjects(await getCollection("projects"));
 const notes = sortNotes(await getCollection("notes"));
+assertContentRelationships(projects, notes);
 const featuredProjects = projects.filter((project) => project.data.featured).slice(0, 3);
 const latestNotes = notes.slice(0, 4);
 const galaxy = buildGalaxyModel(projects, notes);

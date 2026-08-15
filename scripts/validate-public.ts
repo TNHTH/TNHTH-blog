@@ -35,6 +35,8 @@ async function validateSnapshot(): Promise<number> {
     return relative.startsWith("src/content/") || relative.startsWith("src/assets/") || relative.startsWith("src/data/generated/") || relative.startsWith("public/") || relative === "src/data/profile.json" || relative === "config/site.ts" || relative === "config/public-repos.yml" || relative === "README.md";
   });
   let checked = 0;
+  const projectIds = new Set<string>();
+  const noteRelationships: Array<{ file: string; relatedProjects: unknown }> = [];
   for (const file of payload) {
     const relative = path.relative(projectRoot, file).replaceAll("\\", "/");
     const ext = path.extname(file).toLowerCase();
@@ -47,12 +49,19 @@ async function validateSnapshot(): Promise<number> {
       if (data.publish !== undefined || data.visibility !== undefined) throw new Error(`${relative}: 公开快照不得保留内部发布标记`);
       if (relative.startsWith("src/content/projects/")) {
         if (!data.title || !data.summary || !data.outcome || !data.status || !data.period) throw new Error(`${relative}: Project frontmatter 不完整`);
+        projectIds.add(path.basename(relative, ".md"));
       } else if (relative.startsWith("src/content/notes/")) {
         if (!data.title || !data.date) throw new Error(`${relative}: Note frontmatter 不完整`);
+        noteRelationships.push({ file: relative, relatedProjects: data.relatedProjects });
       }
       assertPublicBody(body, relative);
     }
     checked += 1;
+  }
+  for (const relationship of noteRelationships) {
+    if (relationship.relatedProjects === undefined) continue;
+    if (!Array.isArray(relationship.relatedProjects)) throw new Error(`${relationship.file}: relatedProjects 必须是数组`);
+    for (const projectId of relationship.relatedProjects) if (typeof projectId !== "string" || !projectIds.has(projectId)) throw new Error(`${relationship.file}: relatedProjects 指向不存在的 project ${String(projectId)}`);
   }
   console.log(`public snapshot verified: ${checked} files`);
   return checked;
