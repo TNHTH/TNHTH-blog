@@ -1,81 +1,276 @@
 ---
 import type { GalaxyEdge, GalaxyNode } from "../lib/content";
-interface Props { nodes: GalaxyNode[]; edges: GalaxyEdge[]; }
+
+interface Props {
+  nodes: GalaxyNode[];
+  edges: GalaxyEdge[];
+}
+
 const { nodes, edges } = Astro.props;
+const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind === "topic" ? 1.55 : kind === "center" ? 2.9 : 1.05;
 ---
-<div class="galaxy" data-galaxy>
+
+<div class="galaxy" data-galaxy data-graph-mode="quiet">
+  <button class="galaxy-exit focus-ring" data-galaxy-exit type="button">返回介绍</button>
+  <div class="sr-only" data-graph-status aria-live="polite">关系图处于安静模式</div>
   <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
     <title id="galaxy-title">内容关系图</title>
-    <desc id="galaxy-desc">项目、笔记和主题围绕个人主页形成的关系图。内容链接同时显示在普通页面中。</desc>
-    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="23" ry="16" />
-    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="37" ry="27" transform="rotate(-22 50 50)" />
-    <ellipse class="galaxy-orbit" cx="50" cy="50" rx="45" ry="34" transform="rotate(28 50 50)" />
-    {edges.map((edge) => {
-      const source = nodes.find((node) => node.id === edge.source);
-      const target = nodes.find((node) => node.id === edge.target);
-      return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
-    })}
-    {nodes.map((node) => node.href ? (
-      <a class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-x={node.x} data-node-y={node.y} href={node.href} aria-label={node.label} tabindex="0">
-        <circle cx={node.x} cy={node.y} r={node.kind === "project" ? 2.1 : node.kind === "topic" ? 1.5 : 1} />
-        <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
-      </a>
-    ) : (
-      <g class="galaxy-node galaxy-node-center" data-node-id={node.id} data-node-x={node.x} data-node-y={node.y} aria-hidden="true">
-        <circle cx={node.x} cy={node.y} r="2.8" />
-        <text x={node.x + 2} y={node.y - 1}>{node.label}</text>
-      </g>
-    ))}
+    <desc id="galaxy-desc">项目、笔记和主题组成的可拖动关系图。拖动节点或空白区域可以探索关系，普通页面链接仍然提供完整内容入口。</desc>
+    <rect class="galaxy-backdrop" x="0" y="0" width="100" height="100" aria-hidden="true" />
+    <g class="galaxy-stage" data-galaxy-stage>
+      <g data-galaxy-ripples aria-hidden="true"></g>
+      {edges.map((edge) => {
+        const source = nodes.find((node) => node.id === edge.source);
+        const target = nodes.find((node) => node.id === edge.target);
+        return source && target ? <line class="galaxy-edge" data-source={edge.source} data-target={edge.target} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
+      })}
+      {nodes.map((node) => node.href ? (
+        <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} transform={`translate(${node.x} ${node.y})`}>
+          <a href={node.href} aria-label={node.label} tabindex="0">
+            <circle cx="0" cy="0" r={nodeRadius(node.kind)} />
+            <text x={nodeRadius(node.kind) + 2} y="-1">{node.label}</text>
+          </a>
+        </g>
+      ) : (
+        <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} aria-hidden="true" transform={`translate(${node.x} ${node.y})`}>
+          <circle cx="0" cy="0" r={nodeRadius(node.kind)} />
+          <text x={nodeRadius(node.kind) + 2} y="-1">{node.label}</text>
+        </g>
+      ))}
+    </g>
   </svg>
 </div>
+
 <script>
-  const root = document.querySelector("[data-galaxy]");
-  const svg = root?.querySelector("svg");
-  const nodes = [...(root?.querySelectorAll("[data-node-id]") ?? [])];
-  const edges = [...(root?.querySelectorAll(".galaxy-edge") ?? [])];
-  const setStyle = (element: Element, property: string, value: string) => (element as HTMLElement | SVGElement).style.setProperty(property, value);
-  const reset = () => {
-    nodes.forEach((node) => setStyle(node, "--label-opacity", node.classList.contains("galaxy-node-center") ? ".82" : "0"));
-    edges.forEach((edge) => {
-      edge.classList.remove("is-near");
-      setStyle(edge, "--edge-opacity", ".28");
+  import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
+
+  type GalaxySimulationNode = SimulationNodeDatum & { id: string; kind: string; x: number; y: number };
+  type GalaxySimulationLink = SimulationLinkDatum<GalaxySimulationNode> & { source: string | GalaxySimulationNode; target: string | GalaxySimulationNode };
+
+  const root = document.querySelector<HTMLElement>("[data-galaxy]");
+  const hero = root?.closest<HTMLElement>(".home-hero");
+  const svg = root?.querySelector<SVGSVGElement>("svg");
+  const stage = root?.querySelector<SVGGElement>("[data-galaxy-stage]");
+  const rippleLayer = root?.querySelector<SVGGElement>("[data-galaxy-ripples]");
+  const exitButton = root?.querySelector<HTMLButtonElement>("[data-galaxy-exit]");
+  const status = root?.querySelector<HTMLElement>("[data-graph-status]");
+  const nodeElements = [...(root?.querySelectorAll<SVGGElement>(".galaxy-node[data-node-id]") ?? [])];
+  const edgeElements = [...(root?.querySelectorAll<SVGLineElement>(".galaxy-edge") ?? [])];
+
+  if (root && svg && stage && rippleLayer) {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const initialNodes = nodeElements.map((element) => ({
+      id: element.dataset.nodeId ?? "",
+      kind: element.dataset.nodeKind ?? "note",
+      x: Number(element.dataset.nodeX ?? 50),
+      y: Number(element.dataset.nodeY ?? 50),
+    })) as GalaxySimulationNode[];
+    const links = edgeElements.map((element) => ({
+      source: element.dataset.source ?? "",
+      target: element.dataset.target ?? "",
+    })) as GalaxySimulationLink[];
+    const byId = new Map(initialNodes.map((node) => [node.id, node]));
+    const view = { x: 0, y: 0, k: 1 };
+    let drag: { kind: "node" | "pan"; id?: string; pointerId: number; lastX: number; lastY: number; moved: boolean } | null = null;
+    let suppressClick = false;
+    let restoreTimer: number | undefined;
+
+    const simulation = forceSimulation<GalaxySimulationNode>(initialNodes)
+      .force("link", forceLink<GalaxySimulationNode, GalaxySimulationLink>(links).id((node) => node.id).distance((link) => typeof link.source === "string" || typeof link.source === "number" ? 13 : link.source.kind === "center" ? 19 : 13).strength(.5))
+      .force("charge", forceManyBody().strength(-17))
+      .force("collide", forceCollide().radius((node: any) => node.kind === "project" ? 5 : node.kind === "center" ? 4 : 3.1).strength(.9))
+      .force("center", forceCenter(50, 50).strength(.16))
+      .alphaDecay(.018)
+      .alphaTarget(reducedMotion ? 0 : .018);
+
+    const setView = () => stage.setAttribute("transform", `translate(${view.x} ${view.y}) scale(${view.k})`);
+    const setStatus = (message: string) => { if (status) status.textContent = message; };
+    const rawPoint = (event: PointerEvent | WheelEvent) => {
+      const rect = svg.getBoundingClientRect();
+      return { x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 };
+    };
+    const graphPoint = (event: PointerEvent | WheelEvent) => {
+      const point = rawPoint(event);
+      return { x: (point.x - view.x) / view.k, y: (point.y - view.y) / view.k };
+    };
+    const render = () => {
+      initialNodes.forEach((node) => {
+        const element = nodeElements.find((candidate) => candidate.dataset.nodeId === node.id);
+        if (!element) return;
+        element.setAttribute("transform", `translate(${node.x} ${node.y})`);
+        element.dataset.nodeX = String(node.x);
+        element.dataset.nodeY = String(node.y);
+      });
+      links.forEach((link, index) => {
+        const source = typeof link.source === "string" ? byId.get(link.source) : link.source;
+        const target = typeof link.target === "string" ? byId.get(link.target) : link.target;
+        const element = edgeElements[index];
+        if (!source || !target || !element) return;
+        element.setAttribute("x1", String(source.x));
+        element.setAttribute("y1", String(source.y));
+        element.setAttribute("x2", String(target.x));
+        element.setAttribute("y2", String(target.y));
+      });
+      setView();
+    };
+    const neighborsOf = (id: string) => new Set([id, ...links.flatMap((link) => {
+      const source = typeof link.source === "string" ? link.source : link.source.id;
+      const target = typeof link.target === "string" ? link.target : link.target.id;
+      return source === id ? [target] : target === id ? [source] : [];
+    })]);
+    const setFocus = (id: string | null) => {
+      const neighbors = id ? neighborsOf(id) : new Set<string>();
+      nodeElements.forEach((element) => {
+        const nodeId = element.dataset.nodeId ?? "";
+        const isMuted = Boolean(id && !neighbors.has(nodeId));
+        element.classList.toggle("is-active", nodeId === id);
+        element.classList.toggle("is-muted", isMuted);
+        const text = element.querySelector("text");
+        if (text) text.setAttribute("style", `--label-opacity: ${nodeId === id ? ".98" : isMuted ? "0" : id ? ".72" : "0"}`);
+      });
+      edgeElements.forEach((element) => {
+        const isNear = Boolean(id && (element.dataset.source === id || element.dataset.target === id));
+        element.classList.toggle("is-near", isNear);
+        element.classList.toggle("is-muted", Boolean(id && !isNear));
+      });
+    };
+    const nearestNode = (point: { x: number; y: number }) => initialNodes.reduce<{ node: any; distance: number } | null>((nearest, node) => {
+      const distance = Math.hypot(node.x - point.x, node.y - point.y);
+      return !nearest || distance < nearest.distance ? { node, distance } : nearest;
+    }, null);
+    const ripple = (point: { x: number; y: number }) => {
+      if (reducedMotion) return;
+      for (let index = 0; index < 4; index += 1) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("class", "galaxy-ripple");
+        circle.setAttribute("cx", String(point.x));
+        circle.setAttribute("cy", String(point.y));
+        circle.setAttribute("r", "2");
+        rippleLayer.append(circle);
+        const start = performance.now() + index * 240;
+        const animate = (now: number) => {
+          const progress = Math.min(1, Math.max(0, (now - start) / 900));
+          if (progress === 0) { requestAnimationFrame(animate); return; }
+          circle.setAttribute("r", String(2 + progress * 16));
+          circle.style.opacity = String((1 - progress) * .48);
+          if (progress < 1) requestAnimationFrame(animate); else circle.remove();
+        };
+        requestAnimationFrame(animate);
+      }
+    };
+    const enterExplore = () => {
+      window.clearTimeout(restoreTimer);
+      hero?.classList.add("is-exploring");
+      root.dataset.graphMode = "explore";
+      setStatus("关系图处于探索模式。拖动节点、空白区域或滚轮缩放。按返回介绍恢复。");
+    };
+    const scheduleRestore = () => {
+      window.clearTimeout(restoreTimer);
+      restoreTimer = window.setTimeout(() => {
+        if (!drag) {
+          hero?.classList.remove("is-exploring");
+          root.dataset.graphMode = "quiet";
+          setStatus("关系图处于安静模式");
+        }
+      }, 2800);
+    };
+    const resetView = () => {
+      view.x = 0; view.y = 0; view.k = 1;
+      setView();
+      hero?.classList.remove("is-exploring");
+      root.dataset.graphMode = "quiet";
+      setStatus("关系图处于安静模式");
+      window.clearTimeout(restoreTimer);
+    };
+
+    simulation.on("tick", render);
+    render();
+    if (reducedMotion) simulation.stop();
+
+    svg.addEventListener("pointerdown", (event) => {
+      const pointer = event as PointerEvent;
+      const target = (pointer.target as Element | null)?.closest<SVGAElement>("[data-node-id]");
+      const point = graphPoint(pointer);
+      if (target) {
+        const node = byId.get(target.dataset.nodeId ?? "");
+        if (!node) return;
+        drag = { kind: "node", id: node.id, pointerId: pointer.pointerId, lastX: pointer.clientX, lastY: pointer.clientY, moved: false };
+        node.fx = node.x; node.fy = node.y;
+        simulation.alphaTarget(.25).restart();
+        ripple({ x: node.x, y: node.y });
+      } else {
+        drag = { kind: "pan", pointerId: pointer.pointerId, lastX: pointer.clientX, lastY: pointer.clientY, moved: false };
+        ripple(point);
+      }
+      enterExplore();
+      svg.setPointerCapture(pointer.pointerId);
     });
-  };
-  const activate = (activeId: string | null, pointerX?: number, pointerY?: number) => {
-    let nearestId = activeId;
-    if (!nearestId && pointerX !== undefined && pointerY !== undefined) {
-      nearestId = nodes.reduce<string | null>((nearest, node) => {
-        const nodeX = Number(node.getAttribute("data-node-x"));
-        const nodeY = Number(node.getAttribute("data-node-y"));
-        if (!nearest) return node.getAttribute("data-node-id");
-        const current = nodes.find((item) => item.getAttribute("data-node-id") === nearest);
-        if (!current) return node.getAttribute("data-node-id");
-        const currentDistance = Math.hypot(Number(current.getAttribute("data-node-x")) - pointerX, Number(current.getAttribute("data-node-y")) - pointerY);
-        const nextDistance = Math.hypot(nodeX - pointerX, nodeY - pointerY);
-        return nextDistance < currentDistance ? node.getAttribute("data-node-id") : nearest;
-      }, null);
-    }
-    nodes.forEach((node) => {
-      const id = node.getAttribute("data-node-id");
-      setStyle(node, "--label-opacity", id === nearestId ? ".98" : node.classList.contains("galaxy-node-center") ? ".82" : "0");
+    svg.addEventListener("pointermove", (event) => {
+      const pointer = event as PointerEvent;
+      if (drag) {
+        const dx = pointer.clientX - drag.lastX;
+        const dy = pointer.clientY - drag.lastY;
+        if (Math.hypot(dx, dy) > 2) drag.moved = true;
+        if (drag.kind === "node" && drag.id) {
+          const node = byId.get(drag.id);
+          if (node) {
+            const point = graphPoint(pointer);
+            node.fx = point.x; node.fy = point.y;
+          }
+        } else {
+          const rect = svg.getBoundingClientRect();
+          view.x += (dx / rect.width) * 100;
+          view.y += (dy / rect.height) * 100;
+          setView();
+        }
+        drag.lastX = pointer.clientX; drag.lastY = pointer.clientY;
+        return;
+      }
+      const nearest = nearestNode(graphPoint(pointer));
+      setFocus(nearest && nearest.distance < 10 ? nearest.node.id : null);
     });
-    edges.forEach((edge) => {
-      const related = nearestId && (edge.getAttribute("data-source") === nearestId || edge.getAttribute("data-target") === nearestId);
-      edge.classList.toggle("is-near", Boolean(related));
-      setStyle(edge, "--edge-opacity", related ? ".9" : ".2");
+    const finishPointer = (event: Event) => {
+      if (!drag) return;
+      const completed = drag;
+      drag = null;
+      if (completed.kind === "node" && completed.id) {
+        const node = byId.get(completed.id);
+        if (node) { node.fx = null; node.fy = null; ripple({ x: node.x, y: node.y }); }
+        simulation.alphaTarget(reducedMotion ? 0 : .018);
+      }
+      if (completed.moved) suppressClick = true;
+      window.setTimeout(() => { suppressClick = false; }, 80);
+      if (svg.hasPointerCapture((event as PointerEvent).pointerId)) svg.releasePointerCapture((event as PointerEvent).pointerId);
+      scheduleRestore();
+    };
+    svg.addEventListener("pointerup", finishPointer);
+    svg.addEventListener("pointercancel", finishPointer);
+    svg.addEventListener("pointerleave", () => { if (!drag) setFocus(null); });
+    svg.addEventListener("wheel", (event) => {
+      const wheel = event as WheelEvent;
+      wheel.preventDefault();
+      const point = rawPoint(wheel);
+      const before = graphPoint(wheel);
+      view.k = Math.min(2.8, Math.max(.72, view.k * Math.exp(-wheel.deltaY * .001)));
+      view.x = point.x - before.x * view.k;
+      view.y = point.y - before.y * view.k;
+      setView();
+      enterExplore();
+      scheduleRestore();
+    }, { passive: false });
+    nodeElements.forEach((element) => {
+      const link = element.querySelector<HTMLAnchorElement>("a");
+      element.addEventListener("pointerenter", () => setFocus(element.dataset.nodeId ?? null));
+      link?.addEventListener("focus", () => setFocus(element.dataset.nodeId ?? null));
+      link?.addEventListener("blur", () => setFocus(null));
+      link?.addEventListener("click", (event) => {
+        if (suppressClick) { event.preventDefault(); return; }
+        const id = element.dataset.nodeId ?? null;
+        setFocus(id);
+        const node = byId.get(id ?? "");
+        if (node) ripple({ x: node.x, y: node.y });
+      });
     });
-  };
-  svg?.addEventListener("pointermove", (event) => {
-    const rect = svg.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    activate(null, x, y);
-  });
-  svg?.addEventListener("pointerleave", reset);
-  nodes.forEach((node) => {
-    node.addEventListener("focus", () => activate(node.getAttribute("data-node-id")));
-    node.addEventListener("blur", reset);
-    node.addEventListener("pointerenter", () => activate(node.getAttribute("data-node-id")));
-  });
-  reset();
+    exitButton?.addEventListener("click", resetView);
+  }
 </script>
