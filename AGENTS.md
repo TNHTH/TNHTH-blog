@@ -42,6 +42,34 @@ pnpm build
 
 PR 描述必须记录运行过的命令、内容脱敏结果、内部链接与附件检查结果；UI 变化还应记录桌面、768px 与 360px 的页面检查和浏览器控制台结果。
 
+## 网页技能路由
+
+本仓库使用以下技能组合，按任务选择最小必要集合，不并行加载重复能力：
+
+- 视觉与界面：`frontend-design` 负责实现，`ui-ux-pro-max` 负责视觉审查；沿用本仓库既定的纸张色、宋体、关系图和内容优先原则，不以通用模板替换产品决策。
+- 浏览器验证：优先 `browser` / `agent-browser-verify`；需要 CLI 脚本时使用 `playwright`，需要持久调试会话时使用 `playwright-interactive`。探索性回归优先调用 agent-browser 内置的 `dogfood` 工作流。
+- 前端测试与排错：`webapp-testing` 负责用户流程，`code-review` 负责代码风险，`debug` 负责根因定位；同一问题不重复启动等价的浏览器流程。
+- Web 质量：`web-quality-audit` 作为总审计入口；按发现的问题再选择 `accessibility`、`performance`、`core-web-vitals`、`seo` 或 `best-practices`，不能把所有专项技能都当作独立主流程重复执行。
+- 发布与交付：GitHub 变更使用 `github` / `yeet`，Vercel 预览和生产验证使用 Vercel 部署与验证技能；未获生产授权不得执行 merge 或 Production 部署。
+
+技能来源和接入日期：
+
+- OpenAI curated：`playwright`、`playwright-interactive`，接入日期 `2026-08-16`。
+- `addyosmani/web-quality-skills`：`web-quality-audit`、`accessibility`、`performance`、`core-web-vitals`、`seo`、`best-practices`，接入日期 `2026-08-16`。
+- 已有 `frontend-design`、`ui-ux-pro-max`、`browser`、`webapp-testing`、`code-review`、`debug` 保持为既有能力，不再安装重复的 `frontend-skill` 或 `frontend-testing-debugging`。
+
+每次 UI 或交互变更至少执行：
+
+```text
+pnpm check
+pnpm test
+pnpm build
+pnpm test:e2e
+浏览器首屏 + 一个移动视口 + 目标交互 + 控制台错误检查
+```
+
+质量审计是趋势和回归信号；当前线上首页基线（`2026-08-16`）为 Performance 98、Accessibility 100、SEO 100、Best Practices 100，不能为了提高分数而牺牲产品语义、隐私边界或无障碍。
+
 ## 一次性实施护栏
 
 - 内容真值模型固定为 `projects + notes`；旧 `/work`、`/writing` 和 `/gallery` 只保留兼容入口。
