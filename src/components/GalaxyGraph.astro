@@ -278,8 +278,11 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     };
 
     simulation.on("tick", render);
+    // The quiet state is a deliberate, readable composition. Force simulation
+    // should only run while a node is being dragged; otherwise the graph drifts
+    // between renders and labels can converge on top of one another.
+    simulation.stop();
     render();
-    if (reducedMotion) simulation.stop();
 
     svg.addEventListener("pointerdown", (event) => {
       const pointer = event as PointerEvent;
@@ -330,7 +333,13 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         if (node) { node.fx = null; node.fy = null; ripple({ x: node.x, y: node.y }); }
         simulation.stop();
       }
-      if (completed.moved) suppressClick = true;
+      if (completed.moved) {
+        suppressClick = true;
+        hoveredId = null;
+        focusedId = null;
+        elementById.get(completed.id ?? "")?.querySelector<HTMLAnchorElement>("a")?.blur();
+        updateFocus();
+      }
       window.setTimeout(() => { suppressClick = false; }, 80);
       if (svg.hasPointerCapture((event as PointerEvent).pointerId)) svg.releasePointerCapture((event as PointerEvent).pointerId);
       scheduleRestore();

@@ -59,6 +59,10 @@ test("首页星系每个节点都有真实入口，拖拽释放后回到聚合�
   await expect(galaxy.locator(".galaxy-node-project .galaxy-node-link").first()).toHaveAttribute("href", /\/projects\//);
   await expect(galaxy.locator(".galaxy-node-note .galaxy-node-link").first()).toHaveAttribute("href", /\/notes\//);
 
+  await page.waitForTimeout(350);
+  const quietPositions = await nodes.evaluateAll((elements) => elements.map((element) => ({ x: Number(element.getAttribute("data-node-x")), y: Number(element.getAttribute("data-node-y")), homeX: Number(element.getAttribute("data-node-home-x")), homeY: Number(element.getAttribute("data-node-home-y")) })));
+  expect(quietPositions.every(({ x, y, homeX, homeY }) => Math.abs(x - homeX) < 0.01 && Math.abs(y - homeY) < 0.01)).toBe(true);
+
   const target = galaxy.locator(".galaxy-node-project").first().locator("circle").last();
   const box = await target.boundingBox();
   expect(box).not.toBeNull();
@@ -74,6 +78,8 @@ test("首页星系每个节点都有真实入口，拖拽释放后回到聚合�
   await expect.poll(async () => galaxy.getAttribute("data-graph-mode"), { timeout: 2_000 }).toBe("quiet");
   const positions = await nodes.evaluateAll((elements) => elements.map((element) => ({ x: Number(element.getAttribute("data-node-x")), y: Number(element.getAttribute("data-node-y")), homeX: Number(element.getAttribute("data-node-home-x")), homeY: Number(element.getAttribute("data-node-home-y")) })));
   expect(positions.every(({ x, y, homeX, homeY }) => Math.abs(x - homeX) < 0.01 && Math.abs(y - homeY) < 0.01)).toBe(true);
+  const visibleLabels = await galaxy.locator(".galaxy-node text").evaluateAll((labels) => labels.filter((label) => Number(getComputedStyle(label).opacity) > 0).map((label) => label.textContent));
+  expect(visibleLabels).toEqual(["郭伟浩"]);
 });
 
 test("portable server 返回自定义 404", async ({ page, request }) => {
