@@ -21,7 +21,7 @@ const metrics = entry.data.evidence.filter((item) => item.kind === "metric");
     <div class="eyebrow">项目 · {status}</div>
     <div class="mt-5 grid gap-8 md:grid-cols-[1fr_260px] md:items-end">
       <div><h1 class="display m-0 max-w-4xl text-5xl leading-tight md:text-7xl">{entry.data.title}</h1><p class="muted mt-6 max-w-2xl text-xl leading-9">{entry.data.outcome}</p></div>
-      <div class="text-base leading-8"><div>{entry.data.period}</div>{entry.data.role && <div class="muted">{entry.data.role}</div>}<div class="mt-4 flex flex-wrap gap-4">{entry.data.repo && <a class="focus-ring underline" href={entry.data.repo} target="_blank" rel="noreferrer">GitHub →</a>}{entry.data.demo && <a class="focus-ring underline" href={entry.data.demo} target="_blank" rel="noreferrer">Demo →</a>}</div></div>
+      <div class="text-base leading-8"><div>{entry.data.period}</div>{entry.data.role && <div class="muted">{entry.data.role}</div>}<div class="mt-4 flex flex-wrap gap-4">{entry.data.repo && <a class="focus-ring underline" href={entry.data.repo} target="_blank" rel="noreferrer" aria-label={`${entry.data.title} · GitHub 项目源码`}>GitHub → 项目源码</a>}{entry.data.demo && <a class="focus-ring underline" href={entry.data.demo} target="_blank" rel="noreferrer" aria-label={`${entry.data.title} · 在线演示`}>Demo → 在线演示</a>}</div></div>
     </div>
 
     {entry.data.evidence.length > 0 && <section class="mt-14 border-y border-[var(--line)] py-8" aria-labelledby="evidence-title">

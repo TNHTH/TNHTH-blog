@@ -30,11 +30,12 @@ a:hover { color: var(--signal); }
 .muted { color: var(--muted); }
 .accent { color: var(--signal); }
 .focus-ring:focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; }
-.tag { border: 1px solid var(--line); padding: .25rem .5rem; color: var(--muted); font-size: .75rem; }
-.project-card { min-height: 25rem; border: 1px solid var(--line); padding: 1.25rem; background: color-mix(in srgb, var(--paper) 84%, var(--paper-soft)); transition: border-color .3s ease, transform .3s ease, background-color .3s ease; }
-.project-card:hover { border-color: var(--signal); transform: translateY(-.25rem); background: var(--paper-soft); }
+.tag { border: 1px solid var(--line); border-radius: 999px; padding: .25rem .6rem; color: var(--muted); font-size: .75rem; }
+.project-card { min-height: 25rem; border: 1px solid color-mix(in srgb, var(--line) 88%, transparent); border-radius: 1rem; padding: 1.35rem; background: color-mix(in srgb, var(--paper) 84%, var(--paper-soft)); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ink) 4%, transparent); transition: border-color .3s ease, transform .3s ease, background-color .3s ease, box-shadow .3s ease; }
+.project-card:hover { border-color: color-mix(in srgb, var(--signal) 62%, var(--line)); transform: translateY(-.25rem); background: var(--paper-soft); box-shadow: 0 .85rem 2rem color-mix(in srgb, var(--ink) 7%, transparent); }
 .project-card-top { display: flex; align-items: center; justify-content: space-between; }
-.project-proof { display: flex; min-height: 8rem; flex-direction: column; justify-content: end; border-bottom: 1px solid var(--line); padding-bottom: .75rem; color: var(--signal); font-family: var(--mono); font-size: .72rem; }
+.project-proof { position: relative; display: flex; min-height: 8rem; flex-direction: column; justify-content: end; border-bottom: 0; padding-bottom: .75rem; color: var(--signal); font-family: var(--mono); font-size: .72rem; }
+.project-proof::after { position: absolute; right: 0; bottom: 0; left: 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 82%, transparent); content: ""; }
 .note-list-item { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; border-top: 1px solid var(--line); padding: 1.5rem 0; }
 .note-list-item time { color: var(--signal); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
 .home-hero { position: relative; min-height: clamp(30rem, 68svh, 40rem); overflow: hidden; isolation: isolate; }
