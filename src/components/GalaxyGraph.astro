@@ -69,6 +69,8 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     const byId = new Map(initialNodes.map((node) => [node.id, node]));
     const view = { x: 0, y: 0, k: 1 };
     let drag: { kind: "node" | "pan"; id?: string; pointerId: number; lastX: number; lastY: number; moved: boolean } | null = null;
+    let hoveredId: string | null = null;
+    let focusedId: string | null = null;
     let suppressClick = false;
     let restoreTimer: number | undefined;
     let restoreRaf: number | undefined;
@@ -158,6 +160,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         element.classList.toggle("is-muted", Boolean(id && !isNear));
       });
     };
+    const updateFocus = () => setFocus(focusedId ?? hoveredId);
     const ripple = (point: { x: number; y: number }) => {
       if (reducedMotion) return;
       for (let index = 0; index < 4; index += 1) {
@@ -334,7 +337,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     };
     svg.addEventListener("pointerup", finishPointer);
     svg.addEventListener("pointercancel", finishPointer);
-    svg.addEventListener("pointerleave", () => { if (!drag) setFocus(null); });
+    svg.addEventListener("pointerleave", () => { if (!drag) { hoveredId = null; updateFocus(); } });
     svg.addEventListener("wheel", (event) => {
       const wheel = event as WheelEvent;
       wheel.preventDefault();
@@ -352,13 +355,15 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     });
     nodeElements.forEach((element) => {
       const link = element.querySelector<HTMLAnchorElement>("a");
-      element.addEventListener("pointerenter", () => setFocus(element.dataset.nodeId ?? null));
-      link?.addEventListener("focus", () => setFocus(element.dataset.nodeId ?? null));
-      link?.addEventListener("blur", () => setFocus(null));
+      const nodeId = element.dataset.nodeId ?? null;
+      element.addEventListener("pointerenter", () => { hoveredId = nodeId; updateFocus(); });
+      element.addEventListener("pointerleave", () => { hoveredId = null; updateFocus(); });
+      link?.addEventListener("focus", () => { focusedId = nodeId; updateFocus(); });
+      link?.addEventListener("blur", () => { if (focusedId === nodeId) focusedId = null; updateFocus(); });
       link?.addEventListener("click", (event) => {
         if (suppressClick) { event.preventDefault(); return; }
         event.preventDefault();
-        const id = element.dataset.nodeId ?? null;
+        const id = nodeId;
         setFocus(id);
         const node = byId.get(id ?? "");
         if (node) ripple({ x: node.x, y: node.y });

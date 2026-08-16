@@ -31,10 +31,14 @@ test("首页星系只显示局部标签并增强局部关系", async ({ page }) 
   await expect(galaxy).toBeVisible();
   const hiddenLabels = await galaxy.locator(".galaxy-node-project text").evaluateAll((labels) => labels.map((label) => getComputedStyle(label).opacity));
   expect(hiddenLabels.every((opacity) => opacity === "0")).toBe(true);
+  const quietEdgeOpacity = await galaxy.locator(".galaxy-edge").evaluateAll((edges) => edges.map((edge) => getComputedStyle(edge).opacity));
+  expect(quietEdgeOpacity.every((opacity) => opacity === "0")).toBe(true);
   const node = galaxy.locator(".galaxy-node-project").first();
   await node.dispatchEvent("pointerenter");
   await expect(node.locator("text")).toHaveCSS("opacity", "0.98");
   await expect(galaxy.locator(".galaxy-edge.is-near").first()).toHaveCSS("opacity", "0.9");
+  await node.dispatchEvent("pointerleave");
+  await expect(galaxy.locator(".galaxy-edge").first()).toHaveCSS("opacity", "0");
   await galaxy.locator("svg").dispatchEvent("wheel", { bubbles: true, cancelable: true, clientX: 700, clientY: 300, deltaY: -400 });
   await expect(galaxy).toHaveAttribute("data-graph-mode", "explore");
   await expect(page.locator(".home-hero")).toHaveClass(/is-exploring/);
@@ -73,6 +77,14 @@ test("首页星系每个节点都有真实入口，拖拽释放后回到聚合�
 });
 
 test("portable server 返回自定义 404", async ({ page, request }) => {
+  const htmlResponse = await request.get("/");
+  expect(htmlResponse.headers()["cache-control"]).toContain("max-age=0");
+  expect(htmlResponse.headers()["x-content-type-options"]).toBe("nosniff");
+  await page.goto("/");
+  const stylesheet = await page.locator('link[rel="stylesheet"]').first().getAttribute("href");
+  expect(stylesheet).toBeTruthy();
+  const assetResponse = await request.get(stylesheet!);
+  expect(assetResponse.headers()["cache-control"]).toContain("immutable");
   const response = await request.get("/this-route-does-not-exist-123");
   expect(response.status()).toBe(404);
   await page.goto("/404");

@@ -30,6 +30,8 @@ a:hover { color: var(--signal); }
 .muted { color: var(--muted); }
 .accent { color: var(--signal); }
 .focus-ring:focus-visible { outline: 3px solid var(--signal); outline-offset: 4px; }
+.skip-link { position: fixed; top: .75rem; left: .75rem; z-index: 50; transform: translateY(-180%); border: 1px solid var(--signal); border-radius: .5rem; background: var(--paper); padding: .65rem .9rem; color: var(--ink); transition: transform .18s ease-out; }
+.skip-link:focus-visible { transform: translateY(0); outline: 3px solid var(--signal); outline-offset: 3px; }
 .tag { border: 1px solid var(--line); border-radius: 999px; padding: .25rem .6rem; color: var(--muted); font-size: .75rem; }
 .project-card { min-height: 25rem; border: 1px solid color-mix(in srgb, var(--line) 88%, transparent); border-radius: 1rem; padding: 1.35rem; background: color-mix(in srgb, var(--paper) 84%, var(--paper-soft)); box-shadow: 0 .55rem 1.5rem color-mix(in srgb, var(--ink) 4%, transparent); transition: border-color .3s ease, transform .3s ease, background-color .3s ease, box-shadow .3s ease; }
 .project-card:hover { border-color: color-mix(in srgb, var(--signal) 62%, var(--line)); transform: translateY(-.25rem); background: var(--paper-soft); box-shadow: 0 .85rem 2rem color-mix(in srgb, var(--ink) 7%, transparent); }
@@ -44,22 +46,23 @@ a:hover { color: var(--signal); }
 .home-hero-description { max-width: 31rem; font-size: 1.1rem; line-height: 1.95; }
 .home-hero-meta { color: var(--muted); font-size: .92rem; line-height: 1.8; }
 .home-hero-galaxy { position: absolute; inset: 0; z-index: 0; min-height: 0; }
-.home-section { padding: 4.5rem 0; border-top: 1px solid var(--line); }
+.home-section { content-visibility: auto; contain-intrinsic-size: 1px 520px; padding: 4.5rem 0; border-top: 1px solid var(--line); }
 .short-about { max-width: 47rem; font-size: clamp(1.7rem, 3vw, 2.8rem); line-height: 1.45; }
-.galaxy { position: relative; width: 100%; height: 100%; min-height: 100%; overflow: hidden; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--signal) 7%, var(--paper)) 0, var(--paper) 63%); cursor: grab; }
+.galaxy { position: relative; width: 100%; height: 100%; min-height: 100%; contain: layout paint; overflow: hidden; background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--signal) 7%, var(--paper)) 0, var(--paper) 63%); cursor: grab; }
 .galaxy:active { cursor: grabbing; }
 .galaxy::before { position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, var(--paper) 0%, color-mix(in srgb, var(--paper) 96%, transparent) 27%, color-mix(in srgb, var(--paper) 50%, transparent) 45%, transparent 68%); content: ""; opacity: .96; pointer-events: none; transition: opacity .52s ease; }
 .galaxy svg { position: relative; z-index: 0; display: block; width: 100%; height: 100%; min-height: 100%; user-select: none; touch-action: none; }
 .galaxy-backdrop { fill: transparent; pointer-events: all; }
-.galaxy-stage { transform-origin: 50% 50%; }
-.galaxy-edge { --edge-opacity: .2; stroke: var(--line); stroke-width: .24; stroke-dasharray: 1.2 2.8; opacity: var(--edge-opacity); pointer-events: none; transition: opacity .18s ease, stroke .18s ease, stroke-width .18s ease; }
-.galaxy-edge-core { --edge-opacity: .34; stroke-width: .32; }
-.galaxy-edge-project-topic { --edge-opacity: .25; }
-.galaxy-edge-note-project, .galaxy-edge-note-topic { --edge-opacity: .55; stroke: color-mix(in srgb, var(--signal) 42%, var(--line)); stroke-width: .34; stroke-dasharray: .8 2.2; }
+.galaxy-stage { transform-origin: 50% 50%; will-change: transform; }
+.galaxy-edge { --edge-opacity: 0; stroke: var(--line); stroke-width: .24; stroke-dasharray: 1.2 2.8; opacity: var(--edge-opacity); pointer-events: none; transition: opacity .18s ease, stroke .18s ease, stroke-width .18s ease; }
+.galaxy-edge-core { --edge-opacity: 0; stroke-width: .32; }
+.galaxy-edge-project-topic { --edge-opacity: 0; }
+.galaxy-edge-note-project, .galaxy-edge-note-topic { --edge-opacity: 0; stroke: color-mix(in srgb, var(--signal) 42%, var(--line)); stroke-width: .34; stroke-dasharray: .8 2.2; }
 .galaxy-edge.is-near { --edge-opacity: .9; stroke: var(--signal); }
 .galaxy-edge.is-near { stroke-width: .5; }
 .galaxy-edge.is-muted { --edge-opacity: .06; }
 .galaxy-node { --label-opacity: 0; cursor: pointer; fill: var(--ink); pointer-events: all; transition: opacity .22s ease; }
+.galaxy-node-link { pointer-events: all; }
 .galaxy-node circle { --node-fill: var(--ink); fill: var(--node-fill); stroke: var(--paper); stroke-width: .42; transform-box: fill-box; transform-origin: center; transition: fill .18s ease, r .18s ease, stroke .18s ease; }
 .galaxy-node text { fill: var(--ink); font-family: var(--serif); font-size: 2.15px; opacity: var(--label-opacity); pointer-events: none; transition: opacity .18s ease; }
 .galaxy-node:hover circle, .galaxy-node:focus-visible circle, .galaxy-node.is-active circle { fill: var(--signal); }

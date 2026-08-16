@@ -16,6 +16,13 @@ const contentTypes = {
   ".woff2": "font/woff2",
 };
 
+function cacheControl(urlPath) {
+  const pathname = urlPath.split("?")[0];
+  if (pathname.endsWith(".html") || !path.extname(pathname)) return "public, max-age=0, must-revalidate";
+  if (pathname.startsWith("/_astro/") || /^\/pagefind\/(fragment|index)\//.test(pathname)) return "public, max-age=31536000, immutable";
+  return "public, max-age=86400, stale-while-revalidate=604800";
+}
+
 function safePath(urlPath) {
   const decoded = decodeURIComponent(urlPath.split("?")[0]);
   const relative = decoded.replace(/^\/+/, "");
@@ -49,6 +56,11 @@ const server = createServer(async (request, response) => {
     }
     response.statusCode = 200;
     response.setHeader("content-type", contentTypes[path.extname(file).toLowerCase()] || "application/octet-stream");
+    response.setHeader("cache-control", cacheControl(request.url || "/"));
+    response.setHeader("x-content-type-options", "nosniff");
+    response.setHeader("x-frame-options", "DENY");
+    response.setHeader("referrer-policy", "strict-origin-when-cross-origin");
+    response.setHeader("permissions-policy", "camera=(), geolocation=(), microphone=()");
     createReadStream(file).pipe(response);
   } catch (error) {
     response.statusCode = 500;
