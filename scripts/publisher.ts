@@ -88,7 +88,8 @@ async function stageEntry(entry: ProposalEntry, stagingRoot: string, approvals: 
   if (!isHumanApproved(entry, approvals)) throw new Error(`${entry.id}: source and hash are not approved by the human allowlist`);
   const source = await sourceFile(entry.source);
   if (await hashFile(source) !== entry.sourceSha256) throw new Error(`${entry.source}: source hash changed after review`);
-  const raw = await fs.readFile(source, "utf8");
+  const raw = await fs.readFile(entry.publicSource ? path.resolve(repoRoot, entry.publicSource) : source, "utf8");
+  if (entry.publicSource && await hashFile(path.resolve(repoRoot, entry.publicSource)) !== entry.publicSha256) throw new Error(`${entry.publicSource}: public draft hash changed after review`);
   const { data, body } = readFrontmatter(raw);
   assertV3Frontmatter(data, entry.collection, entry.source);
   assertPublicBody(body, entry.source);
@@ -119,17 +120,50 @@ async function validateStaging(stagingRoot: string): Promise<void> {
 async function atomicReplace(staged: string, destination: string): Promise<void> {
   const backup = `${destination}.previous-${process.pid}`;
   await fs.rm(backup, { recursive: true, force: true });
+
+  const isWindowsRenameIssue = (error: unknown): boolean => {
+    const code = (error as NodeJS.ErrnoException).code;
+    return process.platform === "win32" && (code === "EPERM" || code === "EEXIST" || code === "ENOTEMPTY");
+  };
+
+  const copyReplace = async (): Promise<void> => {
+    await fs.cp(destination, backup, { recursive: true, force: true, errorOnExist: false });
+    try {
+      // Windows can keep a directory handle open even when its files are writable.
+      // The staging tree is a complete copy of src, so this preserves the same
+      // contents while retaining a recoverable backup if the copy fails.
+      await fs.cp(staged, destination, { recursive: true, force: true, errorOnExist: false });
+      await fs.rm(backup, { recursive: true, force: true });
+    } catch (error) {
+      await fs.rm(destination, { recursive: true, force: true });
+      await fs.cp(backup, destination, { recursive: true, force: true, errorOnExist: false });
+      await fs.rm(backup, { recursive: true, force: true });
+      throw error;
+    }
+  };
+
   let moved = false;
   try {
     await fs.rename(destination, backup);
     moved = true;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      // The destination does not exist; the normal rename below remains atomic.
+    } else if (isWindowsRenameIssue(error)) {
+      await copyReplace();
+      return;
+    } else {
+      throw error;
+    }
   }
   try {
     await fs.rename(staged, destination);
     await fs.rm(backup, { recursive: true, force: true });
   } catch (error) {
+    if (isWindowsRenameIssue(error) && !moved) {
+      await copyReplace();
+      return;
+    }
     await fs.rm(destination, { recursive: true, force: true });
     if (moved) await fs.rename(backup, destination);
     throw error;
@@ -140,7 +174,7 @@ async function prepare(): Promise<void> {
   if (!process.argv.includes("--dry-run")) throw new Error("prepare requires --dry-run; it never approves content");
   const root = requireVault();
   const policyPath = argument("--allowlist") ?? defaultAllowlist;
-  const value = parse(await fs.readFile(policyPath, "utf8")) as { entries?: Array<{ source: string; sha256?: string; sourceSha256?: string; collection: string; slug: string; assets?: Array<{ source: string; sha256: string }> }> };
+  const value = parse(await fs.readFile(policyPath, "utf8")) as { entries?: Array<{ source: string; sha256?: string; sourceSha256?: string; publicSource?: string; publicSha256?: string; collection: string; slug: string; assets?: Array<{ source: string; sha256: string }> }> };
   if (!value.entries?.length) throw new Error("allowlist/proposal has no entries");
   const entries: ProposalEntry[] = [];
   for (const item of value.entries) {
@@ -148,7 +182,7 @@ async function prepare(): Promise<void> {
     if (!inside(root, source)) throw new Error(`${item.source}: source path escaped vault`);
     const sourceSha256 = item.sourceSha256 ?? item.sha256;
     if (!sourceSha256) throw new Error(`${item.source}: source hash missing`);
-    entries.push({ id: `${item.collection}/${item.slug}`, source: item.source.replaceAll("\\", "/"), sourceSha256, collection: publicCollection(item.collection), slug: item.slug, media: item.assets });
+    entries.push({ id: `${item.collection}/${item.slug}`, source: item.source.replaceAll("\\", "/"), sourceSha256, publicSource: item.publicSource?.replaceAll("\\", "/"), publicSha256: item.publicSha256, collection: publicCollection(item.collection), slug: item.slug, media: item.assets });
   }
   const manifest: PublishManifest = { version: 1, mode: "proposal", generatedAt: new Date().toISOString(), toolVersion: publisherVersion, entries };
   entries.forEach(assertProposal);
@@ -166,9 +200,8 @@ async function applyManifest(): Promise<void> {
   await fs.mkdir(stagingRoot, { recursive: true });
   try {
     await fs.cp(path.join(repoRoot, "src"), path.join(stagingRoot, "src"), { recursive: true });
-    await fs.rm(path.join(stagingRoot, "src", "content"), { recursive: true, force: true });
-    await fs.rm(path.join(stagingRoot, "src", "assets"), { recursive: true, force: true });
     await fs.mkdir(path.join(stagingRoot, "src", "content"), { recursive: true });
+    await fs.mkdir(path.join(stagingRoot, "src", "assets"), { recursive: true });
     for (const entry of manifest.entries) await stageEntry(entry, stagingRoot, approvals);
     await validateStaging(stagingRoot);
     await atomicReplace(path.join(stagingRoot, "src"), path.join(repoRoot, "src"));
