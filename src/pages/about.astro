@@ -11,7 +11,7 @@ import { site } from "../../config/site";
     </div>
     <div class="self-end text-base leading-8">
       <p class="m-0"><span data-profile="location">{site.location}</span><br /><span data-profile="headline">{site.headline}</span></p>
-      <a class="focus-ring mt-5 inline-block underline" href={site.github} data-profile-href="github">GitHub →</a>
+      <a class="focus-ring mt-5 inline-block underline" href={site.github} data-profile-href="github" aria-label="GitHub · TNHTH-blog 本站源码">GitHub → 本站源码</a>
     </div>
   </section>
   <section class="site-shell home-section mx-auto">
@@ -40,7 +40,7 @@ import { site } from "../../config/site";
   </section>
   <section class="site-shell home-section mx-auto pb-16">
     <div class="grid gap-8 md:grid-cols-[1fr_2fr]">
-      <div class="eyebrow">链接</div><div><a class="focus-ring underline" href={site.github} target="_blank" rel="noreferrer">GitHub →</a></div>
+      <div class="eyebrow">链接</div><div><a class="focus-ring underline" href={site.github} target="_blank" rel="noreferrer" aria-label="GitHub · TNHTH-blog 本站源码">GitHub → 本站源码</a></div>
     </div>
   </section>
 </BaseLayout>

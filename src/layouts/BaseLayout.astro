@@ -48,7 +48,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <footer data-pagefind-ignore class="site-shell mx-auto rule mt-24 flex flex-col gap-5 py-8 text-xs md:flex-row md:items-center md:justify-between">
       <span class="muted">© {new Date().getFullYear()} <span data-profile="name">{site.name}</span> · <span data-profile="brand">{site.brand}</span></span>
       <div class="flex gap-5 text-sm">
-        <a class="focus-ring" href={site.github} data-profile-href="github">GitHub →</a>
+        <a class="focus-ring" href={site.github} data-profile-href="github" aria-label="GitHub · TNHTH-blog 本站源码">GitHub → 本站源码</a>
         {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}
       </div>
     </footer>

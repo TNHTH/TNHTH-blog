@@ -12,6 +12,8 @@ export interface ProposalEntry {
   id: string;
   source: string;
   sourceSha256: string;
+  publicSource?: string;
+  publicSha256?: string;
   collection: "projects" | "notes";
   slug: string;
   media?: ProposalMedia[];
@@ -47,6 +49,8 @@ export function assertProposal(entry: ProposalEntry): void {
   if (!isSafeVaultRelativePath(entry.source)) throw new Error(`${entry.id}: manifest source must be a vault-relative path`);
   if (!/^[a-z0-9][a-z0-9-]*$/.test(entry.slug)) throw new Error(`${entry.id}: slug contains unsupported characters`);
   if (!/^[a-f0-9]{64}$/.test(entry.sourceSha256)) throw new Error(`${entry.id}: sourceSha256 must be a SHA-256 hex digest`);
+  if (entry.publicSource !== undefined && !isSafeVaultRelativePath(entry.publicSource)) throw new Error(`${entry.id}: publicSource must be a repository-relative path`);
+  if (entry.publicSource !== undefined && (!entry.publicSha256 || !/^[a-f0-9]{64}$/.test(entry.publicSha256))) throw new Error(`${entry.id}: publicSha256 must be a SHA-256 hex digest when publicSource is provided`);
   for (const media of entry.media ?? []) {
     if (!isSafeVaultRelativePath(media.source)) throw new Error(`${entry.id}: media source must be a vault-relative path`);
     if (!/^[a-f0-9]{64}$/.test(media.sha256)) throw new Error(`${entry.id}: media sha256 must be a SHA-256 hex digest`);
