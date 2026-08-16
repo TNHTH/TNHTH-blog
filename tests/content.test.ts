@@ -37,6 +37,8 @@ describe("Galaxy model", () => {
   it("keeps note-to-project and note-to-topic relationships visible", () => {
     const model = buildGalaxyModel([project("dashgo", "DashGo")], [note("reward-design")]);
     expect(model.nodes.find((node) => node.id === "center")).toMatchObject({ x: 64, y: 48 });
+    expect(model.nodes.every((node) => node.href)).toBe(true);
+    expect(model.nodes.find((node) => node.id === "center")?.href).toBe("/about");
     expect(model.edges).toEqual(expect.arrayContaining([
       expect.objectContaining({ source: "note:reward-design", target: "project:dashgo", kind: "note-project" }),
       expect.objectContaining({ source: "note:reward-design", target: "topic:强化学习", kind: "note-topic" }),

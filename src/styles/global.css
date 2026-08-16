@@ -74,7 +74,7 @@ a:hover { color: var(--signal); }
 .galaxy-node-project circle { animation: galaxy-breathe 5.8s ease-in-out infinite; }
 .galaxy-node-topic circle { animation: galaxy-breathe 7.2s ease-in-out infinite reverse; }
 .galaxy-node-note circle { animation: galaxy-twinkle 5.4s ease-in-out infinite; }
-.galaxy-node-center > circle:not(.galaxy-center-ring) { animation: galaxy-breathe 6.8s ease-in-out infinite; }
+.galaxy-node-center circle:not(.galaxy-center-ring) { animation: galaxy-breathe 6.8s ease-in-out infinite; }
 .galaxy-center-ring { fill: none; stroke: var(--signal); stroke-width: .22; opacity: 0; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: galaxy-center-pulse 5.2s ease-out infinite; }
 .galaxy-center-ring-delayed { animation-delay: 2.6s; }
 @keyframes galaxy-edge-flow { to { stroke-dashoffset: -12; } }

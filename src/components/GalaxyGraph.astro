@@ -14,7 +14,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
   <div class="sr-only" data-graph-status aria-live="polite">关系图处于安静模式</div>
   <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
     <title id="galaxy-title">内容关系图</title>
-    <desc id="galaxy-desc">项目、笔记和主题组成的可拖动关系图。拖动节点或空白区域可以探索关系，普通页面链接仍然提供完整内容入口。</desc>
+    <desc id="galaxy-desc">项目、笔记和主题组成的可拖动关系图。每个星球都对应一个公开页面；拖动节点或空白区域可以探索关系，普通页面链接仍然提供完整内容入口。</desc>
     <rect class="galaxy-backdrop" x="0" y="0" width="100" height="100" aria-hidden="true" />
     <g class="galaxy-stage" data-galaxy-stage>
       <g data-galaxy-ripples aria-hidden="true"></g>
@@ -23,18 +23,13 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         const target = nodes.find((node) => node.id === edge.target);
         return source && target ? <line class={`galaxy-edge galaxy-edge-${edge.kind}`} data-source={edge.source} data-target={edge.target} data-edge-kind={edge.kind} x1={source.x} y1={source.y} x2={target.x} y2={target.y} /> : null;
       })}
-      {nodes.map((node) => node.href ? (
-        <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} transform={`translate(${node.x} ${node.y})`}>
-          <a href={node.href} aria-label={node.label} tabindex="0">
+      {nodes.map((node) => (
+        <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} data-node-home-x={node.x} data-node-home-y={node.y} transform={`translate(${node.x} ${node.y})`}>
+          <a class="galaxy-node-link" href={node.href} aria-label={node.kind === "center" ? "关于郭伟浩" : node.kind === "project" ? `项目：${node.label}` : node.kind === "topic" ? `主题：${node.label}` : `笔记：${node.label}`} tabindex="0">
+            {node.kind === "center" ? <><circle class="galaxy-center-ring" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /><circle class="galaxy-center-ring galaxy-center-ring-delayed" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /></> : null}
             <circle cx="0" cy="0" r={nodeRadius(node.kind)} />
             <text x={nodeRadius(node.kind) + 2} y="-1">{node.label}</text>
           </a>
-        </g>
-      ) : (
-        <g class={`galaxy-node galaxy-node-${node.kind}`} data-node-id={node.id} data-node-kind={node.kind} data-node-x={node.x} data-node-y={node.y} aria-hidden="true" transform={`translate(${node.x} ${node.y})`}>
-          {node.kind === "center" ? <><circle class="galaxy-center-ring" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /><circle class="galaxy-center-ring galaxy-center-ring-delayed" cx="0" cy="0" r={nodeRadius(node.kind) + 2} /></> : null}
-          <circle cx="0" cy="0" r={nodeRadius(node.kind)} />
-          <text x={nodeRadius(node.kind) + 2} y="-1">{node.label}</text>
         </g>
       ))}
     </g>
@@ -81,7 +76,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     let pendingPan: { dx: number; dy: number } | null = null;
     let homeStrength = reducedMotion ? 0 : .012;
     let restoring = false;
-    let restoreStartedAt = 0;
 
     const radiusByKind: Record<string, number> = { project: 2.3, topic: 1.55, center: 2.9, note: 1.05 };
     const homeForce = () => {
@@ -204,27 +198,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       root.dataset.graphMode = "explore";
       setStatus("关系图处于探索模式。拖动节点或空白区域，滚轮可以缩放。松手后自动恢复。");
     };
-    const restoreView = () => {
-      const from = { ...view };
-      const startedAt = performance.now();
-      const animate = (now: number) => {
-        const progress = Math.min(1, (now - startedAt) / 360);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        view.x = from.x * (1 - eased);
-        view.y = from.y * (1 - eased);
-        view.k = from.k + (1 - from.k) * eased;
-        setView();
-        if (progress < 1) {
-          restoreRaf = window.requestAnimationFrame(animate);
-          return;
-        }
-        restoreRaf = undefined;
-        view.x = 0; view.y = 0; view.k = 1;
-        setView();
-        restoreRaf = undefined;
-      };
-      restoreRaf = window.requestAnimationFrame(animate);
-    };
     const restoreNodes = () => {
       for (const node of initialNodes) {
         node.fx = null;
@@ -234,12 +207,12 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         node.x = node.homeX;
         node.y = node.homeY;
       }
+      simulation.alpha(0).alphaTarget(0).stop();
       render();
     };
     const startRestore = () => {
       cancelRestore();
       restoring = true;
-      restoreStartedAt = performance.now();
       hero?.classList.remove("is-exploring");
       root.dataset.graphMode = "restoring";
       setStatus("关系图正在恢复默认布局");
@@ -252,19 +225,33 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         finishRestore();
         return;
       }
-      homeStrength = .22;
-      simulation.alpha(.55).alphaTarget(.08).restart();
-      restoreView();
-      const waitForRestore = () => {
+      simulation.stop();
+      const fromNodes = initialNodes.map((node) => ({ node, x: node.x, y: node.y }));
+      const fromView = { ...view };
+      const startedAt = performance.now();
+      const animate = (now: number) => {
         if (!restoring) return;
-        const settled = initialNodes.every((node) => Math.hypot(node.x - node.homeX, node.y - node.homeY) < .8 && Math.hypot(node.vx ?? 0, node.vy ?? 0) < .2);
-        if (settled || performance.now() - restoreStartedAt > 1300) {
-          finishRestore();
+        const progress = Math.min(1, (now - startedAt) / 520);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        view.x = fromView.x * (1 - eased);
+        view.y = fromView.y * (1 - eased);
+        view.k = fromView.k + (1 - fromView.k) * eased;
+        fromNodes.forEach(({ node, x, y }) => {
+          node.x = x + (node.homeX - x) * eased;
+          node.y = y + (node.homeY - y) * eased;
+          node.vx = 0;
+          node.vy = 0;
+        });
+        render();
+        if (progress < 1) {
+          restoreRaf = window.requestAnimationFrame(animate);
           return;
         }
-        window.requestAnimationFrame(waitForRestore);
+        restoreRaf = undefined;
+        restoreNodes();
+        finishRestore();
       };
-      window.requestAnimationFrame(waitForRestore);
+      restoreRaf = window.requestAnimationFrame(animate);
     };
     const scheduleRestore = () => {
       window.clearTimeout(restoreTimer);
@@ -338,8 +325,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       if (completed.kind === "node" && completed.id) {
         const node = byId.get(completed.id);
         if (node) { node.fx = null; node.fy = null; ripple({ x: node.x, y: node.y }); }
-        homeStrength = reducedMotion ? 0 : .22;
-        simulation.alpha(.55).alphaTarget(.08).restart();
+        simulation.stop();
       }
       if (completed.moved) suppressClick = true;
       window.setTimeout(() => { suppressClick = false; }, 80);

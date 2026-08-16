@@ -45,6 +45,33 @@ test("首页星系只显示局部标签并增强局部关系", async ({ page }) 
   expect(consoleErrors).toEqual([]);
 });
 
+test("首页星系每个节点都有真实入口，拖拽释放后回到聚合布局", async ({ page }) => {
+  await page.goto("/");
+  const galaxy = page.locator("[data-galaxy]");
+  const nodes = galaxy.locator(".galaxy-node");
+  const links = galaxy.locator(".galaxy-node-link");
+  await expect(links).toHaveCount(await nodes.count());
+  await expect(galaxy.locator(".galaxy-node-center .galaxy-node-link")).toHaveAttribute("href", "/about");
+  await expect(galaxy.locator(".galaxy-node-project .galaxy-node-link").first()).toHaveAttribute("href", /\/projects\//);
+  await expect(galaxy.locator(".galaxy-node-note .galaxy-node-link").first()).toHaveAttribute("href", /\/notes\//);
+
+  const target = galaxy.locator(".galaxy-node-project").first().locator("circle").last();
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) return;
+  const startX = box.x + box.width / 2;
+  const startY = box.y + box.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + 120, startY + 80, { steps: 8 });
+  await page.mouse.up();
+
+  await expect(galaxy).toHaveAttribute("data-graph-mode", "restoring");
+  await expect.poll(async () => galaxy.getAttribute("data-graph-mode"), { timeout: 2_000 }).toBe("quiet");
+  const positions = await nodes.evaluateAll((elements) => elements.map((element) => ({ x: Number(element.getAttribute("data-node-x")), y: Number(element.getAttribute("data-node-y")), homeX: Number(element.getAttribute("data-node-home-x")), homeY: Number(element.getAttribute("data-node-home-y")) })));
+  expect(positions.every(({ x, y, homeX, homeY }) => Math.abs(x - homeX) < 0.01 && Math.abs(y - homeY) < 0.01)).toBe(true);
+});
+
 test("portable server 返回自定义 404", async ({ page, request }) => {
   const response = await request.get("/this-route-does-not-exist-123");
   expect(response.status()).toBe(404);

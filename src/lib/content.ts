@@ -67,7 +67,7 @@ export function relatedNotesForNote(note: NoteEntry, notes: NoteEntry[]): NoteEn
 }
 
 export type GalaxyEdgeKind = "core" | "project-topic" | "note-project" | "note-topic";
-export interface GalaxyNode { id: string; label: string; kind: "center" | "project" | "topic" | "note"; x: number; y: number; href?: string; }
+export interface GalaxyNode { id: string; label: string; kind: "center" | "project" | "topic" | "note"; x: number; y: number; href: string; }
 export interface GalaxyEdge { source: string; target: string; kind: GalaxyEdgeKind; }
 
 export function buildGalaxyModel(projects: ProjectEntry[], notes: NoteEntry[]) {
@@ -96,7 +96,7 @@ export function buildGalaxyModel(projects: ProjectEntry[], notes: NoteEntry[]) {
       }
     }
   }
-  const nodes: GalaxyNode[] = [{ id: "center", label: "郭伟浩", kind: "center", x: layout.centerX, y: layout.centerY }];
+  const nodes: GalaxyNode[] = [{ id: "center", label: "郭伟浩", kind: "center", x: layout.centerX, y: layout.centerY, href: "/about" }];
 
   featuredProjects.forEach((project, index) => {
     const angle = (Math.PI * 2 * index) / Math.max(featuredProjects.length, 1);
