@@ -29,7 +29,6 @@ pnpm build
 - `src/content.config.ts`：内容 schema。
 - `scripts/publisher.ts`：proposal、人工 allowlist、内部最终校验、原子发布与撤回。
 - `scripts/validate-public.ts`：公开快照安全扫描。
-- `config/public-repos.yml`：允许同步的公开 GitHub 仓库清单。
 - `CONTRIBUTING.md`：维护、部署、撤回和恢复流程。
 
 不要提交 `.openai/hosting.json`；它只用于本地 Sites 项目绑定。
