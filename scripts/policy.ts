@@ -82,7 +82,7 @@ export function assertPublicFrontmatter(data: Record<string, unknown>, entry: Al
 export function assertPublicBody(body: string, label: string): void {
   const checks: Array<[RegExp, string]> = [
     [/!\[\[|\[\[|```dataview|```dataviewjs/i, "包含未转换的 Obsidian 内部链接或 Dataview"],
-    [/(?:^|[\s"'(])(?:[A-Za-z]:[\\/]|\/home\/gwh|file:\/\/)/i, "包含本地绝对路径"],
+    [/(?:(?:^|[\s"'(])(?:[A-Za-z]:[\\/]|file:\/\/))|\/home\/[^\s"'()]+|\/Users\/[^\s"'()]+|\/mnt\/[a-z]\/[^\s"'()]+|~\/[^\s"'()]+/i, "包含本地绝对路径"],
     [/ghp_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,}/, "包含疑似访问令牌"],
     [/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i, "包含私钥"],
     [/authorization:\s*bearer\s+\S+/i, "包含 Authorization Bearer 凭据"],

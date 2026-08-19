@@ -39,6 +39,20 @@ describe("publication policy", () => {
     expect(() => assertPublicBody("A clean public note.", "note.md")).not.toThrow();
   });
 
+  it("rejects local absolute paths regardless of username or OS", () => {
+    expect(() => assertPublicBody("参考 /home/guohao/private/note.md", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("参考 /home/ubuntu/logs/x.log", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("see /Users/guohao/Documents/x.md", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("see /mnt/c/Users/guohao/Desktop/x.md", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("cd ~/vault/private.md", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("open file:///home/guohao/note.md", "note.md")).toThrow("本地绝对路径");
+  });
+
+  it("does not flag generic mentions of /home or /Users without a real path", () => {
+    expect(() => assertPublicBody("Linux 用户目录通常位于 /home/ 下。", "note.md")).not.toThrow();
+    expect(() => assertPublicBody("macOS 的用户目录在 /Users/ 下。", "note.md")).not.toThrow();
+  });
+
   it("loads a versioned allowlist", () => {
     const list = loadAllowList("version: 1\nentries:\n  - source: 20_知识/note.md\n    collection: notes\n    slug: note\n    sha256: abc\n");
     expect(list.entries).toHaveLength(1);
