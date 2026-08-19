@@ -1,4 +1,5 @@
 import type { CollectionEntry } from "astro:content";
+import { GALAXY_LAYOUT } from "./galaxy-layout";
 
 export type ProjectEntry = CollectionEntry<"projects">;
 export type NoteEntry = CollectionEntry<"notes">;
@@ -71,16 +72,7 @@ export interface GalaxyNode { id: string; label: string; kind: "center" | "proje
 export interface GalaxyEdge { source: string; target: string; kind: GalaxyEdgeKind; }
 
 export function buildGalaxyModel(projects: ProjectEntry[], notes: NoteEntry[]) {
-  const layout = {
-    centerX: 64,
-    centerY: 48,
-    projectRx: 18,
-    projectRy: 16,
-    topicRx: 26,
-    topicRy: 23,
-    noteRx: 32,
-    noteRy: 29,
-  } as const;
+  const layout = GALAXY_LAYOUT;
   const featuredProjects = sortProjects(projects).slice(0, 6);
   const allTopics = topicIndex(projects, notes);
   const topics = [...allTopics.values()].sort((a, b) => (b.projects.length + b.notes.length) - (a.projects.length + a.notes.length)).slice(0, 8);

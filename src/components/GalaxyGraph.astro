@@ -43,6 +43,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 
 <script>
   import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
+  import { GALAXY_LAYOUT } from "../lib/galaxy-layout";
 
   type GalaxySimulationNode = SimulationNodeDatum & { id: string; kind: string; x: number; y: number; homeX: number; homeY: number };
   type GalaxySimulationLink = SimulationLinkDatum<GalaxySimulationNode> & { source: string | GalaxySimulationNode; target: string | GalaxySimulationNode };
@@ -100,8 +101,8 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     const simulation = forceSimulation<GalaxySimulationNode>(initialNodes)
       .force("link", forceLink<GalaxySimulationNode, GalaxySimulationLink>(links).id((node) => node.id).distance((link) => typeof link.source === "string" || typeof link.source === "number" ? 13 : link.source.kind === "center" ? 19 : 13).strength(.5))
       .force("charge", forceManyBody().strength(-17))
-      .force("collide", forceCollide().radius((node: any) => node.kind === "project" ? 5 : node.kind === "center" ? 4 : 3.1).strength(.9))
-      .force("center", forceCenter(64, 48).strength(.16))
+      .force("collide", forceCollide<GalaxySimulationNode>().radius((node) => node.kind === "project" ? 5 : node.kind === "center" ? 4 : 3.1).strength(.9))
+      .force("center", forceCenter(GALAXY_LAYOUT.centerX, GALAXY_LAYOUT.centerY).strength(.16))
       .force("home", homeForce())
       .alphaDecay(.035)
       .alphaTarget(0);
