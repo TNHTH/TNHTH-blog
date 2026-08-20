@@ -4,8 +4,8 @@
 
 ## 快速链接
 
-- [公开网站](https://tnhth-blog.honest-civet-7225.chatgpt.site)
-- [内容工作台（/admin）](https://tnhth-blog.honest-civet-7225.chatgpt.site/admin)
+- [公开网站](https://tnhth-portfolio.vercel.app)
+- [内容工作台（/admin）](https://tnhth-portfolio.vercel.app/admin)
 - [GitHub 仓库](https://github.com/TNHTH/TNHTH-blog)
 - [GitHub Actions](https://github.com/TNHTH/TNHTH-blog/actions)
 - [Issues](https://github.com/TNHTH/TNHTH-blog/issues)
@@ -16,7 +16,7 @@
 - Astro 6 静态输出、TypeScript、Tailwind CSS
 - Node.js 24、pnpm 10
 - GitHub Actions 执行公开扫描、类型检查、测试和生产构建
-- OpenAI Sites 托管公开快照；构建环境不读取私人 vault
+- Vercel 托管公开快照；构建环境不读取私人 vault
 
 ## 常用命令
 
