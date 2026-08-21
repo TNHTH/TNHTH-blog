@@ -20,6 +20,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (function () {
+        var key = "tnhth-theme";
+        var stored = null;
+        try { stored = localStorage.getItem(key); } catch (error) {}
+        var theme = stored === "dark" || stored === "light" ? stored : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        if (theme === "dark") document.documentElement.dataset.theme = "dark";
+        document.addEventListener("DOMContentLoaded", function () {
+          var button = document.querySelector("#theme-toggle");
+          if (!button) return;
+          button.addEventListener("click", function () {
+            var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+            document.documentElement.dataset.theme = next;
+            try { localStorage.setItem(key, next); } catch (error) {}
+          });
+        });
+      })();
+    </script>
     {noindex && <meta name="robots" content="noindex,nofollow,noarchive" />}
     {noindex && <meta name="referrer" content="no-referrer" />}
     <link rel="canonical" href={canonical} />
@@ -52,18 +71,5 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
         {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}
       </div>
     </footer>
-    <script is:inline>
-      const key = "tnhth-theme";
-      const button = document.querySelector("#theme-toggle");
-      const setTheme = (value) => {
-        document.documentElement.dataset.theme = value;
-        localStorage.setItem(key, value);
-      };
-      if (localStorage.getItem(key) === "dark") setTheme("dark");
-      button?.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
-    </script>
-    <style is:global>
-      :root[data-theme="dark"] { --paper: #171817; --paper-soft: #22231f; --ink: #f4f0e8; --muted: #a9aa9f; --line: #3a3c36; --signal: #f27b61; }
-    </style>
   </body>
 </html>
