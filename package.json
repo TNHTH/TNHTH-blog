@@ -25,7 +25,6 @@
     "verify": "pnpm check && pnpm test",
     "test:e2e": "playwright test",
     "ci": "pnpm verify && pnpm build && pnpm test:e2e",
-    "build:sites": "pnpm build && node scripts/prepare-sites-runtime.mjs",
     "serve:dist": "node scripts/serve-dist.mjs"
   },
   "dependencies": {

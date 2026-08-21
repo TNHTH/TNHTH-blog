@@ -9,7 +9,6 @@
 - [ ] 已运行 `pnpm audit:public`
 - [ ] 已运行 `pnpm run ci`
 - [ ] UI 或路由变更已检查桌面、768px、360px、键盘焦点与浏览器控制台
-- [ ] 未把 `.openai/hosting.json` 或其他运行时凭据提交到仓库
 
 ## 发布说明
 

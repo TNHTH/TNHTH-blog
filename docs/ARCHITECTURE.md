@@ -4,7 +4,7 @@
 
 Astro static output, TypeScript, Tailwind CSS 4 through the Vite plugin, Astro Content Collections with Zod, Pagefind, Vitest, and Playwright. `pnpm build` produces a portable `dist/` containing the site and Pagefind index.
 
-The Sites runtime wrapper is opt-in through `build:sites`; it must not run as the generic build post-step.
+Production deployment is handled by Vercel after the validated static build; `pnpm build` does not read private vault data or invoke deployment tooling.
 
 ## Routes
 
