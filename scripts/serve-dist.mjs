@@ -14,6 +14,10 @@ const contentTypes = {
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
   ".woff2": "font/woff2",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
 };
 
 function safePath(urlPath) {
