@@ -1,0 +1,14 @@
+---
+import type { ProjectEntry } from "../lib/content";
+import { statusLabel } from "../../config/site";
+interface Props { project: ProjectEntry; }
+const { project } = Astro.props;
+const status = statusLabel[project.data.status];
+---
+<a class="project-timeline-item focus-ring group block" href={`/projects/${project.id}`}>
+  <span class="project-timeline-dot" aria-hidden="true"></span>
+  <span class="eyebrow project-timeline-year">{project.data.period}</span>
+  <h2 class="display project-timeline-title transition-transform duration-300 group-hover:translate-x-1">{project.data.title}</h2>
+  <p class="muted project-timeline-outcome">{project.data.outcome}</p>
+  <div class="project-timeline-meta"><span class="accent">{status}</span>{project.data.topics.slice(0, 3).map((topic) => <span class="tag">{topic}</span>)}</div>
+</a>

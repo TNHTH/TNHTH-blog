@@ -31,8 +31,6 @@ pnpm build
 - `scripts/validate-public.ts`：公开快照安全扫描。
 - `CONTRIBUTING.md`：维护、部署、撤回和恢复流程。
 
-不要提交 `.openai/hosting.json`；它只用于本地 Sites 项目绑定。
-
 ## 品牌和链接
 
 网站与仓库品牌固定为 `TNHTH-blog`，作者姓名固定为“郭伟浩”。管理页编辑入口必须指向 `https://github.com/TNHTH/TNHTH-blog`。调整品牌、域名或仓库时，完成全仓旧引用搜索、canonical 检查、页面路由检查和移动端检查。

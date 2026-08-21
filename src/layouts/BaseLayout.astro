@@ -1,16 +1,28 @@
 ---
 import "../styles/global.css";
 import { site } from "../../config/site";
+import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 
 interface Props {
   title?: string;
   description?: string;
   noindex?: boolean;
-  ogImage?: string;
+  ogImage?: ImageMetadata | string;
+  ogImageAlt?: string;
 }
 
-const { title = site.brand, description = site.description, noindex = false, ogImage } = Astro.props;
+const { title = site.brand, description = site.description, noindex = false, ogImage, ogImageAlt } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+
+const resolveOgImage = async (): Promise<{ url: string; width?: number; height?: number }> => {
+  if (!ogImage) return { url: new URL("/og-default.png", Astro.site ?? Astro.url.origin).toString(), width: 1200, height: 630 };
+  if (typeof ogImage === "string") return { url: new URL(ogImage, Astro.site ?? Astro.url.origin).toString() };
+  const optimized = await getImage({ src: ogImage, width: 1200 });
+  return { url: new URL(optimized.src, Astro.site ?? Astro.url.origin).toString(), width: optimized.attributes.width as number, height: optimized.attributes.height as number };
+};
+const resolvedOgImage = await resolveOgImage();
+const resolvedOgImageAlt = ogImageAlt ?? description;
 ---
 
 <!doctype html>
@@ -20,6 +32,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      (function () {
+        var key = "tnhth-theme";
+        var stored = null;
+        try { stored = localStorage.getItem(key); } catch (error) {}
+        var theme = stored === "dark" || stored === "light" ? stored : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        if (theme === "dark") document.documentElement.dataset.theme = "dark";
+        document.addEventListener("DOMContentLoaded", function () {
+          var button = document.querySelector("#theme-toggle");
+          if (!button) return;
+          button.addEventListener("click", function () {
+            var next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+            document.documentElement.dataset.theme = next;
+            try { localStorage.setItem(key, next); } catch (error) {}
+          });
+        });
+      })();
+    </script>
     {noindex && <meta name="robots" content="noindex,nofollow,noarchive" />}
     {noindex && <meta name="referrer" content="no-referrer" />}
     <link rel="canonical" href={canonical} />
@@ -27,7 +58,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={new URL(ogImage, Astro.site ?? Astro.url.origin).toString()} />}
+    <meta property="og:image" content={resolvedOgImage.url} />
+    <meta property="og:image:alt" content={resolvedOgImageAlt} />
+    {resolvedOgImage.width && <meta property="og:image:width" content={String(resolvedOgImage.width)} />}
+    {resolvedOgImage.height && <meta property="og:image:height" content={String(resolvedOgImage.height)} />}
     <title>{title} · {site.brand}</title>
   </head>
   <body class="m-0">
@@ -52,18 +86,5 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
         {site.email && <a class="focus-ring" href={`mailto:${site.email}`}>邮箱 →</a>}
       </div>
     </footer>
-    <script is:inline>
-      const key = "tnhth-theme";
-      const button = document.querySelector("#theme-toggle");
-      const setTheme = (value) => {
-        document.documentElement.dataset.theme = value;
-        localStorage.setItem(key, value);
-      };
-      if (localStorage.getItem(key) === "dark") setTheme("dark");
-      button?.addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
-    </script>
-    <style is:global>
-      :root[data-theme="dark"] { --paper: #171817; --paper-soft: #22231f; --ink: #f4f0e8; --muted: #a9aa9f; --line: #3a3c36; --signal: #f27b61; }
-    </style>
   </body>
 </html>

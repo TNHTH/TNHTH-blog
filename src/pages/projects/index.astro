@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SectionHeading from "../../components/SectionHeading.astro";
-import ProjectCard from "../../components/ProjectCard.astro";
+import ProjectTimelineItem from "../../components/ProjectTimelineItem.astro";
 import EmptyState from "../../components/EmptyState.astro";
 import { getCollection } from "astro:content";
 import { sortProjects } from "../../lib/content";
@@ -11,6 +11,6 @@ const projects = sortProjects(await getCollection("projects"));
 <BaseLayout title="项目" description="郭伟浩公开的机器人与系统项目。">
   <section class="site-shell mx-auto pt-16 md:pt-24">
     <SectionHeading eyebrow="项目" title="做过的项目" intro="先看做成了什么，再看证据、贡献和系统边界。" />
-    {projects.length ? <div class="grid gap-x-10 md:grid-cols-2">{projects.map((project, index) => <ProjectCard project={project} index={index} />)}</div> : <EmptyState title="当前暂无公开项目" description="项目正在经过公开复核。" />}
+    {projects.length ? <ol class="project-timeline mt-4">{projects.map((project) => <li><ProjectTimelineItem project={project} /></li>)}</ol> : <EmptyState title="当前暂无公开项目" description="项目正在经过公开复核。" />}
   </section>
 </BaseLayout>

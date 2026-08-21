@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 import { blockedExtensions, assertPublicBody, isBlockedPath, readFrontmatter } from "./policy";
 
 const projectRoot = path.resolve(import.meta.dirname, "..");
@@ -37,11 +38,19 @@ async function validateSnapshot(): Promise<number> {
   let checked = 0;
   const projectIds = new Set<string>();
   const noteRelationships: Array<{ file: string; relatedProjects: unknown }> = [];
+  const isRasterImage = (ext: string): boolean => [".png", ".webp", ".jpg", ".jpeg", ".gif"].includes(ext);
   for (const file of payload) {
     const relative = path.relative(projectRoot, file).replaceAll("\\", "/");
     const ext = path.extname(file).toLowerCase();
     if (isBlockedPath(relative)) throw new Error(`${relative}: 命中硬禁止路径`);
     if (blockedExtensions.has(ext)) throw new Error(`${relative}: 扩展名不允许进入公开快照`);
+    if (isRasterImage(ext)) {
+      const metadata = await sharp(file).metadata();
+      if (!metadata.width || !metadata.height) throw new Error(`${relative}: 无法解码为有效图片`);
+      if (metadata.exif || metadata.xmp || metadata.iptc || metadata.tifftagPhotoshop) throw new Error(`${relative}: 图片仍包含 EXIF/XMP/IPTC 元数据`);
+      checked += 1;
+      continue;
+    }
     const text = await fs.readFile(file, "utf8");
     assertPublicBody(text, relative);
     if (relative.startsWith("src/content/") && ext === ".md") {

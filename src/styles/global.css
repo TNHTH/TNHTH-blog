@@ -17,6 +17,9 @@
   font-synthesis: none;
 }
 
+:root { color-scheme: light; }
+:root[data-theme="dark"] { --paper: #171817; --paper-soft: #22231f; --ink: #f4f0e8; --muted: #a9aa9f; --line: #3a3c36; --signal: #f27b61; color-scheme: dark; }
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { min-width: 320px; background: var(--paper); }
@@ -36,8 +39,24 @@ a:hover { color: var(--signal); }
 .project-card-top { display: flex; align-items: center; justify-content: space-between; }
 .project-proof { position: relative; display: flex; min-height: 8rem; flex-direction: column; justify-content: end; border-bottom: 0; padding-bottom: .75rem; color: var(--signal); font-family: var(--mono); font-size: .72rem; }
 .project-proof::after { position: absolute; right: 0; bottom: 0; left: 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 82%, transparent); content: ""; }
-.note-list-item { display: grid; grid-template-columns: 7rem 1fr; gap: 1rem; border-top: 1px solid var(--line); padding: 1.5rem 0; }
-.note-list-item time { color: var(--signal); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.note-card { display: block; padding: 1rem 1.1rem; border: 1px solid transparent; border-radius: .65rem; transition: border-color .2s ease, background-color .2s ease; }
+.note-card:hover, .note-card:focus-visible { border-color: var(--line); background: var(--paper-soft); }
+.note-card time { display: block; color: var(--signal); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+.note-card h2 { margin: .4rem 0 0; font-size: 1.15rem; line-height: 1.3; }
+.note-card-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.project-timeline { position: relative; list-style: none; margin: 0; padding-left: 2.5rem; }
+.project-timeline::before { position: absolute; top: 0; bottom: 0; left: .3rem; width: 1px; background: var(--line); content: ""; }
+.project-timeline > li { margin: 0; padding: 0; }
+.project-timeline-item { position: relative; display: block; padding: 2.5rem 0; }
+.project-timeline-dot { position: absolute; top: 2.8rem; left: -2.2rem; width: .55rem; height: .55rem; border-radius: 999px; background: var(--signal); }
+.project-timeline-year { display: block; }
+.project-timeline-title { margin-top: .6rem; font-size: clamp(1.75rem, 3.2vw, 2.5rem); line-height: 1.08; }
+.project-timeline-outcome { margin-top: .75rem; max-width: 42rem; font-size: 1.05rem; line-height: 1.75; }
+.project-timeline-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; font-size: .9rem; }
+@media (max-width: 720px) {
+  .project-timeline { padding-left: 1.75rem; }
+  .project-timeline-dot { left: -1.45rem; }
+}
 .home-hero { position: relative; min-height: clamp(30rem, 68svh, 40rem); overflow: hidden; isolation: isolate; }
 .home-hero-copy { position: relative; z-index: 2; max-width: 36rem; padding: clamp(3rem, 7vw, 5.25rem) 0 4rem; transition: transform .52s cubic-bezier(.22, 1, .36, 1), opacity .32s ease; }
 .home-hero-name { font-size: clamp(3.5rem, 6.2vw, 5rem); line-height: .98; }
@@ -97,7 +116,6 @@ a:hover { color: var(--signal); }
 .prose a { color: var(--signal); text-decoration: underline; text-underline-offset: .2em; }
 @media (min-width: 768px) { .home-hero { min-height: clamp(32rem, 68svh, 40rem); } }
 @media (max-width: 720px) {
-  .note-list-item { grid-template-columns: 1fr; gap: .5rem; }
   .home-hero { min-height: 0; display: flex; flex-direction: column; overflow: visible; }
   .home-hero-copy { order: 1; width: 100%; padding: 3.5rem 0 3rem; }
   .home-hero-description { font-size: 1rem; }
