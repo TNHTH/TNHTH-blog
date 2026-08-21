@@ -1,6 +1,7 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
+import { createEvidenceSchema } from "./lib/evidence-schema";
 
 const source = z.object({
   title: z.string().min(1),
@@ -10,18 +11,9 @@ const source = z.object({
 
 const externalLink = z.object({ label: z.string().min(1), url: z.url() });
 
-const evidence = z.object({
-  kind: z.enum(["image", "video", "demo", "metric", "document"]),
-  label: z.string().min(1),
-  value: z.string().optional(),
-  src: z.string().optional(),
-  href: z.url().optional(),
-  alt: z.string().optional(),
-});
-
 const project = defineCollection({
   loader: glob({ base: "./src/content/projects", pattern: "**/*.md" }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string().min(1),
     summary: z.string().min(1),
     outcome: z.string().min(1),
@@ -32,7 +24,7 @@ const project = defineCollection({
     featured: z.boolean().default(false),
     priority: z.number().int().default(0),
     role: z.string().optional(),
-    evidence: z.array(evidence).default([]),
+    evidence: createEvidenceSchema(image),
     contributions: z.array(z.string()).default([]),
     tech: z.array(z.string()).default([]),
     repo: z.url().optional(),
