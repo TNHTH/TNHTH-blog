@@ -26,22 +26,52 @@ const selectedTopic = Astro.url.searchParams.get("topic") ?? "";
       <span class="muted self-center text-sm" id="note-count">{entries.length} 篇公开笔记</span>
     </form>
     <div id="pagefind-search" class="mb-8" aria-live="polite"></div>
-    <div id="note-results">{entries.length ? entries.map((note) => <NoteListItem note={note} />) : <EmptyState title="当前暂无公开笔记" description="笔记正在经过公开复核。" />}</div>
+    <div id="note-results" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{entries.length ? entries.map((note) => <NoteListItem note={note} />) : <EmptyState title="当前暂无公开笔记" description="笔记正在经过公开复核。" />}</div>
   </section>
 </BaseLayout>
-<script>
+<script is:inline>
   const form = document.querySelector("#note-search-form");
-  const input = document.querySelector("#note-search") as HTMLInputElement | null;
-  const topic = document.querySelector("#note-topic") as HTMLSelectElement | null;
+  const input = document.querySelector("#note-search");
+  const topic = document.querySelector("#note-topic");
   const items = [...document.querySelectorAll("[data-search-item]")];
   const count = document.querySelector("#note-count");
+  const pagefindRoot = document.querySelector("#pagefind-search");
   if (!input) throw new Error("note search input missing");
+
   const initialParams = new URLSearchParams(location.search);
   input.value = initialParams.get("q") ?? input.value;
   if (topic) topic.value = initialParams.get("topic") ?? topic.value;
+
+  const renderPagefindResults = async (query) => {
+    if (!pagefindRoot) return;
+    if (!query) { pagefindRoot.innerHTML = ""; return; }
+    const pagefind = await import("/pagefind/pagefind.js");
+    const result = await pagefind.search(query);
+    const results = await Promise.all(result.results.slice(0, 8).map((item) => item.data()));
+    pagefindRoot.innerHTML = "";
+    if (!results.length) { pagefindRoot.textContent = "没有找到匹配内容"; return; }
+    const heading = document.createElement("p");
+    heading.className = "eyebrow";
+    heading.textContent = "全文搜索";
+    pagefindRoot.append(heading);
+    for (const item of results) {
+      const link = document.createElement("a");
+      link.className = "focus-ring block border-b border-[var(--line)] py-4";
+      link.href = item.url;
+      const title = document.createElement("strong");
+      title.textContent = item.meta?.title ?? item.url;
+      const excerpt = document.createElement("span");
+      excerpt.className = "muted ml-3";
+      excerpt.textContent = (item.excerpt ?? "").replace(/<[^>]+>/g, "");
+      link.append(title, excerpt);
+      pagefindRoot.append(link);
+    }
+  };
+
+  let pagefindDebounce;
   const applyFilter = () => {
     const query = input.value.trim().toLocaleLowerCase();
-    const selectedTopic = topic?.value ?? "";
+    const selectedTopic = topic ? topic.value : "";
     let visible = 0;
     items.forEach((item) => {
       const tags = (item.getAttribute("data-search-tags") ?? "").split(",");
@@ -54,37 +84,12 @@ const selectedTopic = Astro.url.searchParams.get("topic") ?? "";
     if (input.value.trim()) params.set("q", input.value.trim());
     if (selectedTopic) params.set("topic", selectedTopic);
     history.replaceState(null, "", `${location.pathname}${params.toString() ? `?${params}` : ""}`);
+
+    window.clearTimeout(pagefindDebounce);
+    pagefindDebounce = window.setTimeout(() => { renderPagefindResults(input.value.trim()).catch(() => {}); }, 200);
   };
-  input?.addEventListener("input", applyFilter);
-  topic?.addEventListener("change", applyFilter);
-  form?.addEventListener("submit", (event) => { event.preventDefault(); applyFilter(); });
+
+  input.addEventListener("input", applyFilter);
+  if (topic) topic.addEventListener("change", applyFilter);
+  if (form) form.addEventListener("submit", (event) => { event.preventDefault(); applyFilter(); });
   applyFilter();
-</script>
-<script is:inline>
-  const pagefindRoot = document.querySelector("#pagefind-search");
-  const searchQuery = new URLSearchParams(location.search).get("q");
-  if (pagefindRoot && searchQuery) {
-    import("/pagefind/pagefind.js").then(async (pagefind) => {
-      const result = await pagefind.search(searchQuery);
-      const items = await Promise.all(result.results.slice(0, 8).map((item) => item.data()));
-      pagefindRoot.innerHTML = "";
-      if (!items.length) { pagefindRoot.textContent = "没有找到匹配内容"; return; }
-      const heading = document.createElement("p");
-      heading.className = "eyebrow";
-      heading.textContent = "全文搜索";
-      pagefindRoot.append(heading);
-      for (const item of items) {
-        const link = document.createElement("a");
-        link.className = "focus-ring block border-b border-[var(--line)] py-4";
-        link.href = item.url;
-        const title = document.createElement("strong");
-        title.textContent = item.meta?.title ?? item.url;
-        const excerpt = document.createElement("span");
-        excerpt.className = "muted ml-3";
-        excerpt.textContent = (item.excerpt ?? "").replace(/<[^>]+>/g, "");
-        link.append(title, excerpt);
-        pagefindRoot.append(link);
-      }
-    }).catch(() => {});
-  }
-</script>
