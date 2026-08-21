@@ -77,17 +77,6 @@ export function buildGalaxyModel(projects: ProjectEntry[], notes: NoteEntry[]) {
   const allTopics = topicIndex(projects, notes);
   const topics = [...allTopics.values()].sort((a, b) => (b.projects.length + b.notes.length) - (a.projects.length + a.notes.length)).slice(0, 8);
   const sampleNotes = sortNotes(notes).slice(0, 10);
-  const selectedTopicSlugs = new Set(topics.map((topic) => topicSlug(topic.name)));
-  for (const note of sampleNotes) {
-    for (const tag of note.data.tags.slice(0, 2)) {
-      const slug = topicSlug(tag);
-      const topic = allTopics.get(slug);
-      if (topic && !selectedTopicSlugs.has(slug)) {
-        selectedTopicSlugs.add(slug);
-        topics.push(topic);
-      }
-    }
-  }
   const nodes: GalaxyNode[] = [{ id: "center", label: "郭伟浩", kind: "center", x: layout.centerX, y: layout.centerY }];
 
   featuredProjects.forEach((project, index) => {

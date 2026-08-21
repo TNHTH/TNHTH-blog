@@ -105,13 +105,33 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       .force("center", forceCenter(GALAXY_LAYOUT.centerX, GALAXY_LAYOUT.centerY).strength(.16))
       .force("home", homeForce())
       .alphaDecay(.035)
-      .alphaTarget(0);
+      .alphaTarget(0)
+      .stop();
 
     const setView = () => stage.setAttribute("transform", `translate(${view.x} ${view.y}) scale(${view.k})`);
     const setStatus = (message: string) => { if (status) status.textContent = message; };
     const rawPoint = (event: PointerEvent | WheelEvent) => {
-      const rect = svg.getBoundingClientRect();
-      return { x: ((event.clientX - rect.left) / rect.width) * 100, y: ((event.clientY - rect.top) / rect.height) * 100 };
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return { x: GALAXY_LAYOUT.centerX, y: GALAXY_LAYOUT.centerY };
+      const point = svg.createSVGPoint();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      const local = point.matrixTransform(matrix.inverse());
+      return { x: local.x, y: local.y };
+    };
+    const screenDeltaToSvg = (dx: number, dy: number) => {
+      const matrix = svg.getScreenCTM();
+      if (!matrix) return { x: 0, y: 0 };
+      const from = svg.createSVGPoint();
+      from.x = 0;
+      from.y = 0;
+      const to = svg.createSVGPoint();
+      to.x = dx;
+      to.y = dy;
+      const inverse = matrix.inverse();
+      const fromLocal = from.matrixTransform(inverse);
+      const toLocal = to.matrixTransform(inverse);
+      return { x: toLocal.x - fromLocal.x, y: toLocal.y - fromLocal.y };
     };
     const graphPoint = (event: PointerEvent | WheelEvent) => {
       const point = rawPoint(event);
@@ -122,8 +142,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         const element = elementById.get(node.id);
         if (!element) return;
         element.setAttribute("transform", `translate(${node.x} ${node.y})`);
-        element.dataset.nodeX = String(node.x);
-        element.dataset.nodeY = String(node.y);
         const label = element.querySelector("text");
         if (label) {
           const radius = radiusByKind[node.kind] ?? 1.05;
@@ -186,9 +204,22 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       }
     };
     const finishRestore = () => {
+      window.clearTimeout(restoreTimer);
+      restoreTimer = undefined;
+      if (restoreRaf !== undefined) {
+        window.cancelAnimationFrame(restoreRaf);
+        restoreRaf = undefined;
+      }
       restoring = false;
+      restoreNodes();
+      view.x = 0;
+      view.y = 0;
+      view.k = 1;
+      setView();
       homeStrength = reducedMotion ? 0 : .012;
       simulation.alphaTarget(0);
+      simulation.stop();
+      hero?.classList.remove("is-exploring");
       root.dataset.graphMode = "quiet";
       setStatus("关系图处于安静模式");
     };
@@ -277,9 +308,9 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
     const flushPan = () => {
       panRaf = undefined;
       if (!pendingPan) return;
-      const rect = svg.getBoundingClientRect();
-      view.x += (pendingPan.dx / rect.width) * 100;
-      view.y += (pendingPan.dy / rect.height) * 100;
+      const delta = screenDeltaToSvg(pendingPan.dx, pendingPan.dy);
+      view.x += delta.x;
+      view.y += delta.y;
       pendingPan = null;
       setView();
     };
@@ -290,7 +321,6 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 
     simulation.on("tick", render);
     render();
-    if (reducedMotion) simulation.stop();
 
     svg.addEventListener("pointerdown", (event) => {
       const pointer = event as PointerEvent;
