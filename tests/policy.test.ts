@@ -26,6 +26,16 @@ describe("publication policy", () => {
     expect(() => assertPublicBody("open file:///home/guohao/note.md", "note.md")).toThrow("本地绝对路径");
   });
 
+  it("does not flag URLs that merely contain /home/ or /Users/ as a path segment", () => {
+    expect(() => assertPublicBody("参考 https://example.com/home/user/article", "note.md")).not.toThrow();
+    expect(() => assertPublicBody("见 https://saas.io/Users/dashboard/settings", "note.md")).not.toThrow();
+  });
+
+  it("flags a local path even when written as inline Markdown code", () => {
+    expect(() => assertPublicBody("路径是 `/home/guohao/private.txt`", "note.md")).toThrow("本地绝对路径");
+    expect(() => assertPublicBody("配置在 `D:\\cursor\\secret`", "note.md")).toThrow("本地绝对路径");
+  });
+
   it("does not flag generic mentions of /home or /Users without a real path", () => {
     expect(() => assertPublicBody("Linux 用户目录通常位于 /home/ 下。", "note.md")).not.toThrow();
     expect(() => assertPublicBody("macOS 的用户目录在 /Users/ 下。", "note.md")).not.toThrow();
