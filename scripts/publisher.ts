@@ -3,7 +3,7 @@ import path from "node:path";
 import { parse, stringify } from "yaml";
 import sharp from "sharp";
 import { assertPublicBody, readFrontmatter } from "./policy";
-import { assertManifest, assertProposal, isHumanApproved, publicCollection, publisherVersion, stableHash, type HumanApproval, type ProposalEntry, type PublishManifest } from "../src/lib/publisher";
+import { assertHumanAllowlist, assertManifest, assertProposal, isHumanApproved, publicCollection, publisherVersion, stableHash, type HumanApproval, type ProposalEntry, type ProposalMedia, type PublishManifest } from "../src/lib/publisher";
 
 const repoRoot = path.resolve(import.meta.dirname, "..");
 const vaultRoot = process.env.VAULT_ROOT ? path.resolve(process.env.VAULT_ROOT) : null;
@@ -35,10 +35,19 @@ async function sourceFile(relative: string): Promise<string> {
   return full;
 }
 
+async function repoFile(relative: string): Promise<string> {
+  const full = path.resolve(repoRoot, relative);
+  if (!inside(repoRoot, full)) throw new Error(`${relative}: public draft path escaped repository`);
+  const [realRoot, realFull] = await Promise.all([fs.realpath(repoRoot), fs.realpath(full)]);
+  if (!inside(realRoot, realFull)) throw new Error(`${relative}: symlink escaped repository`);
+  return full;
+}
+
 async function readAllowlist(file: string): Promise<HumanApproval[]> {
   if (!file) throw new Error("PUBLISH_ALLOWLIST must point to the human-controlled allowlist");
-  const value = parse(await fs.readFile(file, "utf8")) as { entries?: HumanApproval[] };
+  const value = parse(await fs.readFile(file, "utf8")) as { entries?: unknown[] };
   if (!value || !Array.isArray(value.entries)) throw new Error("allowlist must contain an entries array");
+  assertHumanAllowlist(value.entries);
   return value.entries;
 }
 
@@ -71,16 +80,74 @@ function serializedFrontmatter(data: Record<string, unknown>, body: string): str
   return `---\n${stringify(data)}---\n\n${body.trim()}\n`;
 }
 
-async function sanitizeMedia(entry: ProposalEntry, media: { source: string; sha256: string }, outputRoot: string): Promise<string> {
+async function sanitizeMedia(entry: ProposalEntry, media: ProposalMedia, outputRoot: string, markdownPath: string): Promise<string> {
   const source = await sourceFile(media.source);
   if (await hashFile(source) !== media.sha256) throw new Error(`${media.source}: media hash mismatch`);
   const outputName = `${entry.slug}-${media.sha256.slice(0, 12)}.webp`;
   const output = path.join(outputRoot, "src", "assets", entry.slug, outputName);
   await fs.mkdir(path.dirname(output), { recursive: true });
-  await sharp(source).rotate().resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true }).webp({ quality: 82 }).toFile(output);
+  // Quality raised from the original 82 to 92: this file now also gets a second,
+  // delivery-focused optimization pass by Astro's <Image> (Task 5), so this layer's
+  // job is "produce a high-quality, privacy-safe master," not final network
+  // compression — compressing aggressively twice loses more than either pass alone.
+  await sharp(source).rotate().resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true }).webp({ quality: 92 }).toFile(output);
   const metadata = await sharp(output).metadata();
   if (metadata.exif || metadata.xmp || metadata.iptc || metadata.tifftagPhotoshop) throw new Error(`${media.source}: sanitized output still contains EXIF/GPS/XMP/IPTC metadata`);
-  return outputName;
+  return path.relative(path.dirname(markdownPath), output).replaceAll("\\", "/");
+}
+
+async function resolveEvidenceMediaRefs(publicData: Record<string, unknown>, entry: ProposalEntry, stagingRoot: string, markdownPath: string): Promise<void> {
+  if (entry.collection !== "projects") return;
+
+  const evidence = Array.isArray(publicData.evidence) ? publicData.evidence : [];
+
+  // Private draft contract: image evidence must use mediaRef, never a hand-written
+  // src — src only ever exists in Publisher's own output. Enforced up front, before
+  // touching the filesystem, so a malformed draft is rejected here instead of an
+  // unsanitized path silently passing through untouched (no Sharp EXIF strip, no
+  // hash verification) because nothing downstream ever looked at a plain src.
+  for (const item of evidence) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    if (record.kind === "image") {
+      if ("src" in record) throw new Error(`${entry.id}: private image evidence must use mediaRef, not src`);
+      if (typeof record.mediaRef !== "string" || !record.mediaRef) throw new Error(`${entry.id}: private image evidence requires mediaRef`);
+    } else if ("mediaRef" in record) {
+      throw new Error(`${entry.id}: mediaRef is only allowed on kind: image evidence`);
+    }
+  }
+
+  const assetDir = path.join(stagingRoot, "src", "assets", entry.slug);
+  await fs.rm(assetDir, { recursive: true, force: true });
+  await fs.mkdir(assetDir, { recursive: true });
+
+  const mediaById = new Map((entry.media ?? []).map((media) => [media.id, media]));
+  const resolvedCache = new Map<string, string>();
+  const usedMediaIds = new Set<string>();
+
+  for (const item of evidence) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    if (!("mediaRef" in record)) continue;
+    const mediaRef = record.mediaRef as string;
+    const media = mediaById.get(mediaRef);
+    if (!media) throw new Error(`${entry.id}: evidence.mediaRef "${mediaRef}" has no matching entry in media[]`);
+    usedMediaIds.add(mediaRef);
+    let relativeSrc = resolvedCache.get(mediaRef);
+    if (!relativeSrc) {
+      relativeSrc = await sanitizeMedia(entry, media, stagingRoot, markdownPath);
+      resolvedCache.set(mediaRef, relativeSrc);
+    }
+    record.src = relativeSrc;
+    delete record.mediaRef;
+  }
+
+  // Runs unconditionally, independent of whether evidence was even an array —
+  // approving media and then silently failing to reference it must fail loudly
+  // whether the omission is "no mediaRef anywhere" or "no evidence array at all."
+  for (const media of entry.media ?? []) {
+    if (!usedMediaIds.has(media.id)) throw new Error(`${entry.id}: approved media "${media.id}" is not referenced by any evidence entry`);
+  }
 }
 
 async function stageEntry(entry: ProposalEntry, stagingRoot: string, approvals: HumanApproval[]): Promise<void> {
@@ -88,8 +155,8 @@ async function stageEntry(entry: ProposalEntry, stagingRoot: string, approvals: 
   if (!isHumanApproved(entry, approvals)) throw new Error(`${entry.id}: source and hash are not approved by the human allowlist`);
   const source = await sourceFile(entry.source);
   if (await hashFile(source) !== entry.sourceSha256) throw new Error(`${entry.source}: source hash changed after review`);
-  const raw = await fs.readFile(entry.publicSource ? path.resolve(repoRoot, entry.publicSource) : source, "utf8");
-  if (entry.publicSource && await hashFile(path.resolve(repoRoot, entry.publicSource)) !== entry.publicSha256) throw new Error(`${entry.publicSource}: public draft hash changed after review`);
+  const raw = await fs.readFile(entry.publicSource ? await repoFile(entry.publicSource) : source, "utf8");
+  if (entry.publicSource && await hashFile(await repoFile(entry.publicSource)) !== entry.publicSha256) throw new Error(`${entry.publicSource}: public draft hash changed after review`);
   const { data, body } = readFrontmatter(raw);
   assertV3Frontmatter(data, entry.collection, entry.source);
   assertPublicBody(body, entry.source);
@@ -97,8 +164,8 @@ async function stageEntry(entry: ProposalEntry, stagingRoot: string, approvals: 
   assertPublicBody(JSON.stringify(publicData), entry.source);
   const target = path.join(stagingRoot, "src", "content", entry.collection, `${entry.slug}.md`);
   await fs.mkdir(path.dirname(target), { recursive: true });
+  await resolveEvidenceMediaRefs(publicData, entry, stagingRoot, target);
   await fs.writeFile(target, serializedFrontmatter(publicData, body), "utf8");
-  for (const media of entry.media ?? []) await sanitizeMedia(entry, media, stagingRoot);
 }
 
 async function validateStaging(stagingRoot: string): Promise<void> {
@@ -130,8 +197,10 @@ async function atomicReplace(staged: string, destination: string): Promise<void>
     await fs.cp(destination, backup, { recursive: true, force: true, errorOnExist: false });
     try {
       // Windows can keep a directory handle open even when its files are writable.
-      // The staging tree is a complete copy of src, so this preserves the same
-      // contents while retaining a recoverable backup if the copy fails.
+      // The staging tree is the full desired final state, so replace destination
+      // outright (not merge-copy over it) before copying staged in, or files that
+      // exist in destination but not in staged would survive the "replace".
+      await fs.rm(destination, { recursive: true, force: true });
       await fs.cp(staged, destination, { recursive: true, force: true, errorOnExist: false });
       await fs.rm(backup, { recursive: true, force: true });
     } catch (error) {
@@ -174,7 +243,7 @@ async function prepare(): Promise<void> {
   if (!process.argv.includes("--dry-run")) throw new Error("prepare requires --dry-run; it never approves content");
   const root = requireVault();
   const policyPath = argument("--allowlist") ?? defaultAllowlist;
-  const value = parse(await fs.readFile(policyPath, "utf8")) as { entries?: Array<{ source: string; sha256?: string; sourceSha256?: string; publicSource?: string; publicSha256?: string; collection: string; slug: string; assets?: Array<{ source: string; sha256: string }> }> };
+  const value = parse(await fs.readFile(policyPath, "utf8")) as { entries?: Array<{ source: string; sha256?: string; sourceSha256?: string; publicSource?: string; publicSha256?: string; collection: string; slug: string; assets?: Array<{ id: string; source: string; sha256: string }> }> };
   if (!value.entries?.length) throw new Error("allowlist/proposal has no entries");
   const entries: ProposalEntry[] = [];
   for (const item of value.entries) {
@@ -182,9 +251,10 @@ async function prepare(): Promise<void> {
     if (!inside(root, source)) throw new Error(`${item.source}: source path escaped vault`);
     const sourceSha256 = item.sourceSha256 ?? item.sha256;
     if (!sourceSha256) throw new Error(`${item.source}: source hash missing`);
-    entries.push({ id: `${item.collection}/${item.slug}`, source: item.source.replaceAll("\\", "/"), sourceSha256, publicSource: item.publicSource?.replaceAll("\\", "/"), publicSha256: item.publicSha256, collection: publicCollection(item.collection), slug: item.slug, media: item.assets });
+    const collection = publicCollection(item.collection);
+    entries.push({ id: `${collection}/${item.slug}`, source: item.source.replaceAll("\\", "/"), sourceSha256, publicSource: item.publicSource?.replaceAll("\\", "/"), publicSha256: item.publicSha256, collection, slug: item.slug, media: item.assets });
   }
-  const manifest: PublishManifest = { version: 1, mode: "proposal", generatedAt: new Date().toISOString(), toolVersion: publisherVersion, entries };
+  const manifest: PublishManifest = { version: 2, mode: "proposal", generatedAt: new Date().toISOString(), toolVersion: publisherVersion, entries };
   entries.forEach(assertProposal);
   const output = argument("--out") ?? path.join(tempRoot, "review-manifest.json");
   await fs.mkdir(path.dirname(output), { recursive: true });
@@ -205,10 +275,10 @@ async function applyManifest(): Promise<void> {
     for (const entry of manifest.entries) await stageEntry(entry, stagingRoot, approvals);
     await validateStaging(stagingRoot);
     await atomicReplace(path.join(stagingRoot, "src"), path.join(repoRoot, "src"));
-    const outputHash = stableHash(JSON.stringify(manifest));
+    const manifestHash = stableHash(JSON.stringify(manifest));
     await fs.mkdir(tempRoot, { recursive: true });
-    await fs.writeFile(path.join(tempRoot, "publisher-apply-manifest.json"), `${JSON.stringify({ ...manifest, outputHash, appliedAt: new Date().toISOString() }, null, 2)}\n`, "utf8");
-    console.log(`publisher applied ${manifest.entries.length} entries; output hash ${outputHash}`);
+    await fs.writeFile(path.join(tempRoot, "publisher-apply-manifest.json"), `${JSON.stringify({ ...manifest, manifestHash, appliedAt: new Date().toISOString() }, null, 2)}\n`, "utf8");
+    console.log(`publisher applied ${manifest.entries.length} entries; manifest hash ${manifestHash}`);
   } finally {
     await fs.rm(stagingRoot, { recursive: true, force: true });
   }
