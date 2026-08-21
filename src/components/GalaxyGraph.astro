@@ -12,8 +12,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
 
 <div class="galaxy" data-galaxy data-graph-mode="quiet">
   <div class="sr-only" data-graph-status aria-live="polite">关系图处于安静模式</div>
-  <svg viewBox="0 0 100 100" role="img" aria-labelledby="galaxy-title galaxy-desc">
-    <title id="galaxy-title">内容关系图</title>
+  <svg viewBox="0 0 100 100" role="img" aria-label="内容关系图" aria-describedby="galaxy-desc">
     <desc id="galaxy-desc">项目、笔记和主题组成的可拖动关系图。拖动节点或空白区域可以探索关系，普通页面链接仍然提供完整内容入口。</desc>
     <rect class="galaxy-backdrop" x="0" y="0" width="100" height="100" aria-hidden="true" />
     <g class="galaxy-stage" data-galaxy-stage>
@@ -137,18 +136,79 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
       const point = rawPoint(event);
       return { x: (point.x - view.x) / view.k, y: (point.y - view.y) / view.k };
     };
+    type LabelSide = "left" | "right" | "top" | "bottom";
+    type LabelBox = { left: number; right: number; top: number; bottom: number };
+    const labelBox = (node: GalaxySimulationNode, label: SVGTextElement): LabelBox => {
+      const box = label.getBBox();
+      return { left: node.x + box.x, right: node.x + box.x + box.width, top: node.y + box.y, bottom: node.y + box.y + box.height };
+    };
+    const boxesOverlap = (first: LabelBox, second: LabelBox) => first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
+    const centerSafeBox = (): LabelBox | null => {
+      const center = byId.get("center");
+      if (!center) return null;
+      const radius = radiusByKind.center + 2;
+      return { left: center.x - radius, right: center.x + radius, top: center.y - radius, bottom: center.y + radius };
+    };
+    const centerLabelBox = (): LabelBox | null => {
+      const center = byId.get("center");
+      const element = center ? elementById.get(center.id) : undefined;
+      const label = element?.querySelector<SVGTextElement>("text");
+      return center && label ? labelBox(center, label) : null;
+    };
+    const setLabelSide = (node: GalaxySimulationNode, label: SVGTextElement, side: LabelSide) => {
+      const offset = (radiusByKind[node.kind] ?? 1.05) + 2;
+      if (side === "left") {
+        label.setAttribute("x", String(-offset));
+        label.setAttribute("y", "-1");
+        label.setAttribute("text-anchor", "end");
+      } else if (side === "right") {
+        label.setAttribute("x", String(offset));
+        label.setAttribute("y", "-1");
+        label.setAttribute("text-anchor", "start");
+      } else if (side === "top") {
+        label.setAttribute("x", "0");
+        label.setAttribute("y", String(-(offset + 2)));
+        label.setAttribute("text-anchor", "middle");
+      } else {
+        label.setAttribute("x", "0");
+        label.setAttribute("y", String(offset + 4));
+        label.setAttribute("text-anchor", "middle");
+      }
+    };
+    const placeLabel = (node: GalaxySimulationNode, label: SVGTextElement) => {
+      const horizontal = node.x < GALAXY_LAYOUT.centerX ? "left" : "right";
+      const oppositeHorizontal = horizontal === "left" ? "right" : "left";
+      const vertical = node.y < GALAXY_LAYOUT.centerY ? "top" : "bottom";
+      const oppositeVertical = vertical === "top" ? "bottom" : "top";
+      const candidates: LabelSide[] = [horizontal, oppositeHorizontal, vertical, oppositeVertical];
+      const centerSafe = node.kind === "center" ? null : centerSafeBox();
+      const centerText = node.kind === "center" ? null : centerLabelBox();
+      let bestSide = candidates[0];
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      for (const side of candidates) {
+        setLabelSide(node, label, side);
+        const box = labelBox(node, label);
+        const overflow = Math.max(0, 2 - box.left) + Math.max(0, box.right - 98) + Math.max(0, 2 - box.top) + Math.max(0, box.bottom - 98);
+        const centerOverlap = centerSafe && boxesOverlap(box, centerSafe) ? 100 : 0;
+        const centerTextOverlap = centerText && boxesOverlap(box, centerText) ? 50 : 0;
+        const score = overflow + centerOverlap + centerTextOverlap;
+        if (score < bestScore) {
+          bestScore = score;
+          bestSide = side;
+        }
+        if (overflow === 0 && centerOverlap === 0 && centerTextOverlap === 0) return;
+      }
+
+      setLabelSide(node, label, bestSide);
+    };
     const render = () => {
       initialNodes.forEach((node) => {
         const element = elementById.get(node.id);
         if (!element) return;
         element.setAttribute("transform", `translate(${node.x} ${node.y})`);
         const label = element.querySelector("text");
-        if (label) {
-          const radius = radiusByKind[node.kind] ?? 1.05;
-          const placeLeft = node.x > 76;
-          label.setAttribute("x", String(placeLeft ? -(radius + 2) : radius + 2));
-          label.setAttribute("text-anchor", placeLeft ? "end" : "start");
-        }
+        if (label) placeLabel(node, label);
       });
       links.forEach((link, index) => {
         const source = typeof link.source === "string" ? byId.get(link.source) : link.source;
@@ -175,7 +235,7 @@ const nodeRadius = (kind: GalaxyNode["kind"]) => kind === "project" ? 2.3 : kind
         element.classList.toggle("is-active", nodeId === id);
         element.classList.toggle("is-muted", isMuted);
         const text = element.querySelector("text");
-        if (text) text.setAttribute("style", `--label-opacity: ${nodeId === id ? ".98" : isMuted ? "0" : id ? ".72" : "0"}`);
+        if (text) text.setAttribute("style", `--label-opacity: ${nodeId === id ? ".98" : nodeId === "center" ? ".82" : "0"}`);
       });
       edgeElements.forEach((element) => {
         const isNear = Boolean(id && (element.dataset.source === id || element.dataset.target === id));
