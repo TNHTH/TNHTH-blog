@@ -2,6 +2,8 @@
 
 郭伟浩的中文个人站，记录机器人、强化学习、系统工程与经过复核的技术笔记。品牌名是 **TNHTH-blog**，作者姓名仍为“郭伟浩”。
 
+仓库核对：2026-10-12。长期分支是 `main`。`fix/galaxy-stability` 已快进合入。
+
 ## 快速链接
 
 - [公开网站](https://tnhth-portfolio.vercel.app)
